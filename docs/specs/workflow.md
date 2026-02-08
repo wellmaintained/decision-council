@@ -162,7 +162,7 @@ Completed councils should move out of `active/` so:
 ### What Happens
 
 1. **Moderator moves directory:** `active/<council-id>` → `archive/<council-id>`
-2. **Confirmation to user:** "Council archived at `.opencode/council/archive/<council-id>/`"
+2. **Confirmation to user:** "Council archived at `docs/council/archive/<council-id>/`"
 
 ### What's Preserved
 - `council.yaml` (manifest)

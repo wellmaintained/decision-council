@@ -137,7 +137,7 @@ You control the workflow through gate confirmations. The moderator never proceed
 - Add a follow-up question for the next round
 
 ### Plain Text Persistence
-All council state lives in markdown and YAML files under `.opencode/council/`. This means:
+All council state lives in markdown and YAML files under `docs/council/`. This means:
 - Git-trackable debate history
 - Human-readable at every stage
 - No opaque databases
