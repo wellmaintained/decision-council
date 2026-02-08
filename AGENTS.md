@@ -26,12 +26,12 @@ decision-council/
 │   │   └── advocate-maintainability.md # Quality perspective
 │   ├── commands/                       # Custom commands
 │   │   └── council.md                  # /council <topic> command
+│   ├── package.json                    # Dependencies (@opencode-ai/plugin)
+│   └── .gitignore                      # Ignore node_modules
+├── docs/                               # Documentation and council artifacts
 │   ├── council/                        # Council debate artifacts
 │   │   ├── active/                     # In-progress councils
 │   │   └── archive/                    # Completed councils
-│   ├── package.json                    # Dependencies (@opencode-ai/plugin)
-│   └── .gitignore                      # Ignore node_modules
-├── docs/                               # Documentation
 │   ├── poc-prd.md                      # Complete PRD (544 lines)
 │   └── IMPLEMENTATION-COMPLETE.md      # Verification checklist
 ├── .gitignore                          # Root ignore (Go-focused)
@@ -114,7 +114,7 @@ hidden: true | false (optional, default: false)
 - **Last match wins** (order matters!)
 - Use `deny` default + `allow` specific commands for safety
 
-### Council Files (`.opencode/council/active/<id>/`)
+### Council Files (`docs/council/active/<id>/`)
 
 **Manifest (council.yaml):**
 ```yaml
@@ -242,7 +242,7 @@ perspectives: [security, velocity, maintainability]
   - Always gate round transitions through user confirmation
   - Ask at most one question per message during setup
   - Propose sensible defaults, ask for confirmation (not open-ended questions)
-  - Write all files to `.opencode/council/active/<council-id>/`
+  - Write all files to `docs/council/active/<council-id>/`
   - Update `council.yaml` at every workflow transition
   - Present brief round summaries (3-5 sentences per perspective) at each gate
   - Invoke advocates sequentially, one Task call per advocate per round
@@ -347,7 +347,7 @@ docs: <description>
 
 **What NOT to commit:**
 - `node_modules/` (already ignored)
-- Active council directories (use `.opencode/.gitignore`)
+- Active council directories (use `docs/.gitignore` if you want to exclude them)
 
 ---
 
@@ -387,7 +387,7 @@ docs: <description>
 - **Complete PRD:** `docs/poc-prd.md` (544 lines, authoritative specification)
 - **Implementation Status:** `docs/IMPLEMENTATION-COMPLETE.md` (verification checklist)
 - **Agent Examples:** `.opencode/agents/*.md` (5 working agent configurations)
-- **Active Council Example:** `.opencode/council/active/council-2026-02-08-*/` (real debate in progress)
+- **Active Council Example:** `docs/council/active/council-2026-02-08-*/` (real debate in progress)
 
 ---
 
