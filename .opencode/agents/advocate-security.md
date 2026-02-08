@@ -12,7 +12,14 @@ tools:
   task: false
   webfetch: false
 permission:
-  bash: restrict to safe commands only (cat, ls, grep, find, head, tail - no write operations)
+  bash:
+    "*": deny
+    "cat *": allow
+    "ls *": allow
+    "grep *": allow
+    "find *": allow
+    "head *": allow
+    "tail *": allow
 ---
 
 # Security & Compliance Advocate

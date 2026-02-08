@@ -12,12 +12,12 @@ tools:
   task: false
   webfetch: false
 permission:
-  bash: restrict
-  bash_allowed_commands:
-    - cat
-    - ls
-    - grep
-    - find
+  bash:
+    "*": deny
+    "cat *": allow
+    "ls *": allow
+    "grep *": allow
+    "find *": allow
 ---
 
 # Velocity Advocate
