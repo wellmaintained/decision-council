@@ -1,139 +1,232 @@
-# Adapting the Council Pattern: OpenCode, Claude Code, Cursor
+# Adapting the Council Pattern: A Single Skill for All Platforms
 
-This document describes how to implement the council as a cross-platform system that works across OpenCode, Claude Code, and Cursor with minimal repetition. The core goal: **write each perspective once, use it everywhere**.
+This document describes how to implement the decision council as a **single Agent Skill** that works across OpenCode, Claude Code, and Cursor without per-platform duplication.
 
 ---
 
 ## Table of Contents
 
-1. [The Duplication Problem](#the-duplication-problem)
-2. [Architecture: Perspectives as Data](#architecture-perspectives-as-data)
-3. [Shared Directory Structure](#shared-directory-structure)
-4. [What Gets Written Once](#what-gets-written-once)
-5. [What's Platform-Specific](#whats-platform-specific)
-6. [Platform Wrappers](#platform-wrappers)
-7. [How Perspective Loading Works](#how-perspective-loading-works)
+1. [Background: The Agent Skills Standard](#background-the-agent-skills-standard)
+2. [Architecture: One Skill, Three Platforms](#architecture-one-skill-three-platforms)
+3. [Directory Structure](#directory-structure)
+4. [The Skill Definition](#the-skill-definition)
+5. [Perspective Files](#perspective-files)
+6. [Shared Protocol Files](#shared-protocol-files)
+7. [How It Works at Runtime](#how-it-works-at-runtime)
 8. [Adding a New Perspective](#adding-a-new-perspective)
-9. [Trade-offs and Limitations](#trade-offs-and-limitations)
+9. [Platform-Specific Considerations](#platform-specific-considerations)
+10. [Comparison to Alternatives](#comparison-to-alternatives)
 
 ---
 
-## The Duplication Problem
+## Background: The Agent Skills Standard
 
-The current OpenCode implementation defines each advocate as a named agent file in `.opencode/agents/advocate-*.md`. Each file combines **platform-specific frontmatter** (tools, permissions, temperature, mode) with **platform-agnostic perspective content** (role, values, argumentation strategy, tone).
+The **Agent Skills** open standard ([agentskills.io](https://agentskills.io/specification)), originated by Anthropic in late 2025, defines a portable format for packaging agent capabilities as markdown files with YAML frontmatter. It has been adopted by all three target platforms:
 
-A naive cross-platform port would triplicate every advocate:
+| Platform | Reads skills from | Also reads |
+|----------|------------------|------------|
+| **Claude Code** | `.claude/skills/*/SKILL.md` | `~/.claude/skills/*/SKILL.md` |
+| **OpenCode** | `.opencode/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md`, `.agents/skills/*/SKILL.md` |
+| **Cursor** | `.cursor/skills/*/SKILL.md` | `.claude/skills/*/SKILL.md` |
 
-```
-.opencode/agents/advocate-security.md   ← OpenCode frontmatter + perspective
-.claude/agents/advocate-security.md     ← Claude Code frontmatter + same perspective
-.cursor/agents/advocate-security.md     ← Cursor frontmatter + same perspective
-```
+The critical detail: **OpenCode and Cursor both natively scan `.claude/skills/`** for cross-compatibility. A skill placed in `.claude/skills/council/SKILL.md` is discovered by all three platforms without any symlinking or build steps.
 
-Three copies of the same ~80-line perspective prompt, each with a different 10-line frontmatter header. Add a new advocate? Update three files. Refine an argumentation strategy? Update three files. This doesn't scale.
-
-### What Actually Differs
-
-Analyzing the five agent definitions in this repo:
-
-| Content | Platform-specific? | Lines |
-|---------|--------------------|-------|
-| YAML frontmatter (mode, tools, permissions, temperature) | Yes — completely different syntax per platform | ~10-20 |
-| Role statement ("You are the Security Advocate...") | No | ~2 |
-| Perspective values and approach | No | ~15-20 |
-| Argumentation strategies | No | ~10-15 |
-| Key focus areas | No | ~10-15 |
-| Multi-round engagement rules | No | ~10-15 |
-| Tone and response guidelines | No | ~5-10 |
-
-**~85-95% of each advocate file is platform-agnostic.** The only platform-specific content is the frontmatter wrapper.
-
-The moderator is different — its prompt references platform-specific tool invocation patterns (Task tool syntax, `run_in_background`, `background_output`). But even the moderator's workflow logic (5 phases, gate rules, file conventions) is shared.
+The standard also specifies that **unknown frontmatter fields are silently ignored**. A skill using only the standard fields (`name`, `description`, `allowed-tools`, `license`, `metadata`) works everywhere.
 
 ---
 
-## Architecture: Perspectives as Data
+## Architecture: One Skill, Three Platforms
 
-The key insight: **don't register advocates as named agents at all**. Instead:
-
-1. Store perspective prompts in a shared, platform-neutral location
-2. The moderator reads them at runtime and injects them into generic subagent task prompts
-3. Only the moderator and command entry point need platform-specific files
+The council is implemented as a single skill directory. Everything lives in one place:
 
 ```
-Before (per-platform named agents):
-
-  Moderator → spawns "advocate-security" (named agent with baked-in prompt)
-  Moderator → spawns "advocate-velocity" (named agent with baked-in prompt)
-
-After (dynamic perspective loading):
-
-  Moderator → reads council/perspectives/security.md
-           → spawns generic subagent with perspective content as task prompt
-  Moderator → reads council/perspectives/velocity.md
-           → spawns generic subagent with perspective content as task prompt
+.claude/skills/council/
+├── SKILL.md                        # Moderator prompt (the skill itself)
+├── references/
+│   ├── workflow.md                 # Workflow phases, rules, file conventions
+│   ├── synthesis-format.md         # 6-section synthesis output spec
+│   └── summariser-prompt.md        # Instructions for the synthesis step
+└── perspectives/
+    ├── security.md                 # Security & compliance advocate
+    ├── velocity.md                 # Speed & pragmatism advocate
+    └── maintainability.md          # Long-term code health advocate
 ```
 
-This eliminates all per-platform advocate files. A new perspective is a single markdown file in `council/perspectives/`.
+This is the **entire implementation**. No per-platform wrappers, no generated files, no build step. The skill directory is committed to the repo and discovered by all three platforms.
+
+### Why `.claude/skills/` and Not a Vendor-Neutral Path?
+
+OpenCode also reads `.agents/skills/`, which is more vendor-neutral. However:
+
+- `.claude/skills/` is read by **all three** target platforms today
+- `.agents/skills/` is read by OpenCode but not yet by Cursor
+- The Agent Skills standard originated with Claude Code; `.claude/skills/` is the de facto canonical path
+- If a truly vendor-neutral path gains universal adoption, moving the directory is a one-line `git mv`
+
+### What About OpenCode's Agent/Command System?
+
+The current OpenCode implementation uses `.opencode/agents/council-moderator.md` + `.opencode/commands/council.md`. Moving to a skill changes the invocation model:
+
+| | Current (agent + command) | Proposed (skill) |
+|-|--------------------------|-------------------|
+| Entry point | `/council` via command file | `/council` via skill discovery |
+| Moderator prompt | Baked into agent file | SKILL.md body |
+| Advocate prompts | Separate agent files | Reference files in skill directory |
+| OpenCode-specific files | 6 files (.opencode/agents/ + .opencode/commands/) | 0 files |
+
+OpenCode discovers skills from `.claude/skills/` and exposes them as `/council` in its command menu. The migration path is: keep the existing `.opencode/` files during transition, then remove them once the skill is validated.
 
 ---
 
-## Shared Directory Structure
+## Directory Structure
 
 ```
-council/
-├── perspectives/                    # ← Written once, used by all platforms
-│   ├── security.md                  #    Pure perspective content, no frontmatter
-│   ├── velocity.md
-│   └── maintainability.md
-├── workflow.md                      # ← Shared workflow protocol
-├── synthesis-format.md              # ← Shared synthesis output specification
-└── summariser-prompt.md             # ← Shared summariser instructions
+.claude/skills/council/             # Discovered by Claude Code, OpenCode, and Cursor
+├── SKILL.md                        # ← The moderator (entry point + orchestration)
+├── references/
+│   ├── workflow.md                 # ← Workflow protocol (phases, rules, templates)
+│   ├── synthesis-format.md         # ← Synthesis output specification
+│   └── summariser-prompt.md        # ← Summariser instructions
+└── perspectives/                   # ← Advocate perspective definitions
+    ├── security.md                 #    Each file = one perspective
+    ├── velocity.md                 #    No frontmatter, pure prompt content
+    └── maintainability.md          #    Filename = perspective ID
 
-.opencode/                           # ← OpenCode-specific (thin wrappers)
-├── agents/
-│   └── council-moderator.md         #    OpenCode moderator with tool config
-└── commands/
-    └── council.md                   #    /council entry point
-
-.claude/                             # ← Claude Code-specific (thin wrappers)
-└── skills/
-    └── council/
-        └── SKILL.md                 #    /council entry point + moderator prompt
-
-.cursor/                             # ← Cursor-specific (thin wrappers)
-└── commands/
-    └── council.md                   #    /council entry point + moderator prompt
-
-docs/council/                        # ← Shared output (unchanged)
-├── active/
-└── archive/
+docs/council/                       # ← Runtime output (unchanged)
+├── active/                         #    Active councils
+└── archive/                        #    Completed councils
 ```
 
-Total platform-specific files: **1 per platform** (the moderator/command wrapper).
-Shared files: **perspectives + workflow + synthesis format + summariser prompt**.
+Total files to maintain: **1 SKILL.md + 3 reference files + N perspective files**.
+Platform-specific files: **zero**.
 
 ---
 
-## What Gets Written Once
+## The Skill Definition
 
-### Perspective Files (`council/perspectives/*.md`)
+### `.claude/skills/council/SKILL.md`
 
-Each file is a pure perspective prompt with no frontmatter:
+```yaml
+---
+name: council
+description: >
+  Run a structured multi-perspective debate on a technical decision.
+  Spawns advocate subagents that argue from different perspectives,
+  manages debate rounds with user gate checkpoints between them,
+  and produces a structured synthesis. Use when facing architectural
+  decisions, technology choices, or trade-off analysis.
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+---
+```
+
+```markdown
+You are the Council Moderator. You orchestrate structured
+multi-perspective debates to support human decision-making.
+
+## YOUR ROLE
+
+You are neutral. You never advocate for any position. You manage
+the process, not the arguments. You present information clearly
+and let the perspectives speak for themselves.
+
+## PROTOCOL
+
+Read these files before proceeding:
+- `.claude/skills/council/references/workflow.md` — workflow phases,
+  rules, file conventions, task prompt templates, manifest structure
+- `.claude/skills/council/references/synthesis-format.md` — synthesis
+  output specification
+- `.claude/skills/council/references/summariser-prompt.md` — instructions
+  for the synthesis step
+
+## PERSPECTIVE DISCOVERY
+
+Discover available perspectives by globbing:
+`.claude/skills/council/perspectives/*.md`
+
+Each file name (without extension) is the perspective ID. Read each
+file to get the perspective's full definition.
+
+## ADVOCATE INVOCATION
+
+For each perspective in a round:
+
+1. Read the perspective file
+2. Construct a task prompt using the round template from
+   `workflow.md`, inserting:
+   - The proposition as the PROPOSITION section
+   - The perspective file content as the YOUR ROLE section
+   - Prior round files (if round 2+) as the PRIOR ARGUMENTS section
+3. Spawn a background subagent with this prompt
+4. Repeat for all perspectives in the round — all in parallel
+5. Collect all results before proceeding
+
+## SUMMARISER INVOCATION
+
+After the final round, construct a synthesis task prompt combining:
+- The topic
+- All round files
+- The instructions from `summariser-prompt.md`
+- The format from `synthesis-format.md`
+
+Invoke as a subagent (not background — wait for result).
+Write the output to `synthesis.md` in the council directory.
+
+## GATES
+
+Between every round, present a brief summary of each perspective's
+arguments (3-5 sentences each) and ask the user to confirm before
+proceeding. Do not proceed without explicit confirmation.
+
+## SETUP
+
+When invoked, immediately:
+1. Read the workflow protocol
+2. Discover available perspectives
+3. Frame the user's topic as a clear proposition
+4. Propose defaults (2 rounds, all discovered perspectives)
+5. Ask the user to confirm or adjust — one question only
+
+$ARGUMENTS
+```
+
+### Why This Works Across Platforms
+
+The prompt uses **platform-agnostic language** for subagent invocation:
+
+- "Spawn a background subagent with this prompt" — not `Task(subagent_type=general-purpose, run_in_background=true)` or `background_output(task_id=...)`
+- Each platform's agent knows its own tool set. Claude Code will use the Task tool. OpenCode will use its Task tool. Cursor will use its native subagent mechanism.
+- The prompt describes **what to do**, not **which API to call**
+
+The only platform-specific token is `$ARGUMENTS` — the standard placeholder for user input in skills. OpenCode and Claude Code both support it. Cursor skills also receive user arguments, though the variable name may differ; the agent sees the arguments in context regardless.
+
+---
+
+## Perspective Files
+
+Each perspective is a standalone markdown file with no frontmatter. The moderator reads these at runtime and injects them into subagent task prompts.
+
+### `perspectives/security.md`
 
 ```markdown
 # Security & Compliance Advocate
 
 You are the Security and Compliance Advocate in a decision council.
 Your role is to represent the cautious, risk-aware perspective that
-prioritizes security, compliance, and risk mitigation above other
+prioritises security, compliance, and risk mitigation above other
 considerations.
 
 ## Your Perspective
 
-You approach every decision through the lens of **security risk and
-compliance requirements**. You are not balanced or neutral — you advocate
-strongly for the security viewpoint. Your job is to:
+You approach every decision through the lens of security risk and
+compliance requirements. You are not balanced or neutral — you
+advocate strongly for the security viewpoint. Your job is to:
 
 1. Identify vulnerabilities and attack vectors in proposed solutions
 2. Assess compliance implications against relevant standards
@@ -143,21 +236,21 @@ strongly for the security viewpoint. Your job is to:
 
 ## How You Argue
 
-- Lead with risk: Start by identifying the most critical security gaps
-- Use standards and frameworks: Reference OWASP, CIS, NIST, etc.
-- Think like an attacker: Consider exploitation scenarios
-- Quantify impact: Describe consequences of security failures
-- Demand evidence: Ask for threat models, audits, test results
-- Propose mitigations: Offer concrete security controls
+- Lead with risk: start by identifying the most critical security gaps
+- Use standards and frameworks: reference OWASP, CIS, NIST, etc.
+- Think like an attacker: consider exploitation scenarios
+- Quantify impact: describe consequences of security failures
+- Demand evidence: ask for threat models, audits, test results
+- Propose mitigations: offer concrete security controls
 
 ## Key Areas of Focus
 
-- Authentication & Authorization
-- Data Protection (encryption, access control, logging)
-- Vulnerability Management
+- Authentication & authorisation
+- Data protection (encryption, access control, logging)
+- Vulnerability management
 - Compliance (regulatory requirements, audit trails)
-- Incident Response (detection, investigation, response plans)
-- Supply Chain Security
+- Incident response (detection, investigation, response plans)
+- Supply chain security
 
 ## In Round 2 and Beyond
 
@@ -174,456 +267,106 @@ strongly for the security viewpoint. Your job is to:
 - Constructive: offer solutions, not just problems
 - Persistent: security is non-negotiable
 
-## Response Guidelines
+## Response Format
 
-- Keep responses to 500-800 words
-- Structure with clear sections
-- Use bullet points for clarity
-- Reference specific standards when applicable
-- End with a clear recommendation
+- 500-800 words
+- Clear sections with headers
+- Bullet points for lists of concerns or recommendations
+- End with a clear position statement
 ```
 
-This is identical to the current advocate body — just without the YAML frontmatter.
+### `perspectives/velocity.md` and `perspectives/maintainability.md`
 
-### Workflow Protocol (`council/workflow.md`)
-
-Shared workflow rules that all moderators follow, regardless of platform:
-
-```markdown
-# Council Workflow Protocol
-
-## Phases
-
-1. **Setup** — Frame proposition, discover perspectives, confirm parameters
-2. **Debate Rounds** — Invoke all advocates per round, collect responses
-3. **Gate Checkpoints** — Present summaries, get user confirmation
-4. **Synthesis** — Produce structured synthesis from all rounds
-5. **Archive** — Move council from active/ to archive/
-
-## Rules
-
-- Moderator is always neutral
-- Gate transitions always require user confirmation
-- Ask at most one question per message during setup
-- Default: 2 rounds, open visibility
-- Manifest (`council.yaml`) is single source of truth
-
-## File Conventions
-
-- Council ID: `council-YYYY-MM-DD-<slug>`
-- Directory: `docs/council/active/<council-id>/`
-- Round files: `round-<N>-<perspective>.md`
-- Manifest: `council.yaml`
-- Synthesis: `synthesis.md`
-
-## Task Prompt Templates
-
-### Round 1
-
-    You are participating in a structured council debate.
-
-    PROPOSITION:
-    [contents of topic.md]
-
-    YOUR ROLE:
-    [contents of perspective file]
-
-    INSTRUCTIONS:
-    - Present your strongest arguments from your perspective.
-    - Be specific and concrete.
-    - Structure your response with clear sections.
-    - Do not attempt to be balanced — make the strongest case.
-    - Keep your response to approximately 500-800 words.
-
-### Round 2+
-
-    You are participating in round [N] of a structured council debate.
-
-    PROPOSITION:
-    [contents of topic.md]
-
-    YOUR ROLE:
-    [contents of perspective file]
-
-    PRIOR ARGUMENTS:
-    [contents of round-(N-1)-*.md files]
-
-    INSTRUCTIONS:
-    - Respond to the arguments made by other perspectives.
-    - Identify where you agree, disagree, and see false dichotomies.
-    - Strengthen or refine your position.
-    - You may concede points where evidence warrants it.
-    - Keep your response to approximately 500-800 words.
-
-## Manifest Structure
-
-    id: council-YYYY-MM-DD-<slug>
-    created: <ISO 8601>
-    topic_summary: "<proposition>"
-    status: setup | round-1 | gate-1 | round-2 | gate-2 | synthesis | complete
-    total_rounds: 2
-    current_round: 1
-    visibility: open
-    perspectives:
-      - id: security
-        rounds:
-          1: { status: pending | in-progress | complete, file: round-1-security.md }
-
-## Round File Frontmatter
-
-    ---
-    perspective: security
-    round: 1
-    timestamp: <ISO 8601>
-    council_id: <council-id>
-    responding_to: []
-    word_count: <N>
-    ---
-
-## Error Handling
-
-- Subagent failure: Inform user, offer retry or skip
-- Manifest corruption: Report error, ask user to inspect
-- Fewer than 2 perspectives found: Halt setup
-```
-
-### Synthesis Format (`council/synthesis-format.md`)
-
-```markdown
-# Council Synthesis Format
-
-Produce a synthesis document with exactly these six sections:
-
-## 1. Consensus
-Points of agreement across perspectives. Low-controversy decisions.
-
-## 2. Key Tensions
-Fundamental disagreements. For each: what the disagreement is, which
-perspectives are on each side, strongest argument from each.
-
-## 3. Risk Assessment
-Material risks of each decision path, mapped to the perspectives
-that identified them.
-
-## 4. Recommended Path Forward
-Best risk/reward option — not a hollow compromise. Concrete and actionable.
-
-## 5. Minority Report
-Important dissenting positions not adopted in the recommendation.
-
-## 6. Suggested Actions
-Numbered, concrete next steps. Each must be assignable and verifiable.
-
-## Rules
-
-- Be precise — attribute positions to specific perspectives
-- Do not invent arguments not made in debate
-- Do not soften disagreements — if irreconcilable, say so
-- Recommendation = best risk/reward, not least controversial
-- Each action must be specific, assignable, verifiable
-- Keep total synthesis under 1500 words
-```
-
-### Summariser Prompt (`council/summariser-prompt.md`)
-
-```markdown
-# Council Summariser
-
-You produce structured synthesis documents from multi-perspective
-debate rounds.
-
-## Inputs
-
-You will receive the topic file and all round contribution files.
-These contain the perspectives' arguments across multiple rounds.
-
-## Output
-
-Follow the synthesis format exactly. Produce YAML frontmatter:
-
-    ---
-    council_id: <council-id>
-    generated: <ISO 8601>
-    rounds_completed: <N>
-    perspectives: [security, velocity, maintainability]
-    ---
-
-    # Council Synthesis: [Topic]
-
-    [Six sections per synthesis format]
-
-Your role is structured synthesis, not creative reasoning. Extract
-and organize what was said, identify patterns and tensions, and
-recommend the path with the best risk/reward profile.
-```
+Same structure, different content. Each defines: perspective values, argumentation strategy, key focus areas, multi-round engagement rules, tone, and response format. See the existing OpenCode advocate files for the full content — the body transfers directly, minus the YAML frontmatter.
 
 ---
 
-## What's Platform-Specific
+## Shared Protocol Files
 
-Only the **moderator wrapper** differs per platform. Each wrapper:
+### `references/workflow.md`
 
-1. Declares the `/council` command entry point
-2. Sets platform-specific tool access and permissions
-3. Tells the moderator how to spawn subagents using platform-native mechanisms
-4. References the shared files for everything else
+Contains the workflow phases, rules, file conventions, task prompt templates, manifest YAML structure, round file frontmatter format, and error handling procedures. This is the moderator's operating manual — identical to what was previously baked into the moderator agent's system prompt.
 
-### The moderator prompt structure
+Key sections:
+- **Phases**: Setup, Debate Rounds, Gate Checkpoints, Synthesis, Archive
+- **Rules**: Neutral moderator, user gates, one question per message, defaults
+- **File Conventions**: Council ID format, directory structure, file naming
+- **Task Prompt Templates**: Round 1 and Round 2+ templates with placeholder sections
+- **Manifest Structure**: YAML schema for `council.yaml`
+- **Error Handling**: Subagent failure, manifest corruption, minimum perspective count
 
-```
-[Platform frontmatter — tools, permissions, etc.]
+### `references/synthesis-format.md`
 
-You are the Council Moderator.
+The six-section synthesis output specification: Consensus, Key Tensions, Risk Assessment, Recommended Path Forward, Minority Report, Suggested Actions. Plus rules for attribution, honesty about disagreements, and word limits.
 
-Read `council/workflow.md` for the workflow protocol, file conventions,
-and task prompt templates.
+### `references/summariser-prompt.md`
 
-Read `council/synthesis-format.md` for the synthesis output specification.
-
-Discover available perspectives by globbing `council/perspectives/*.md`.
-
-[Platform-specific subagent invocation instructions]
-
-The user's topic is: [arguments placeholder]
-
-Start the setup phase.
-```
-
-The only content unique to each wrapper is the **subagent invocation instructions** — how to spawn an advocate, how to run them in parallel, and how to collect results. Everything else is a pointer to shared files.
+Instructions for the synthesis subagent: what inputs it receives, how to follow the synthesis format, YAML frontmatter for the output file, and the constraint that it synthesises rather than creates.
 
 ---
 
-## Platform Wrappers
-
-### OpenCode (`.opencode/agents/council-moderator.md`)
-
-```yaml
----
-description: >
-  Orchestrates council debates. Frames propositions, manages rounds,
-  dispatches advocate subagents, gates round transitions with the user,
-  and triggers synthesis. Use /council to start a debate.
-mode: primary
-temperature: 0.2
-tools:
-  write: true
-  edit: true
-  bash: true
-  read: true
-  glob: true
-  grep: true
-  task: true
-  webfetch: false
-permission:
-  bash:
-    "*": deny
-    "cat *": allow
-    "ls *": allow
-    "mkdir *": allow
-    "mv *": allow
-    "cp *": allow
----
-
-You are the Council Moderator. You orchestrate structured
-multi-perspective debates to support human decision-making.
-
-## SHARED PROTOCOL
-
-Read and follow these files:
-- `council/workflow.md` — Workflow phases, rules, file conventions,
-  task prompt templates, manifest structure
-- `council/synthesis-format.md` — Synthesis output specification
-- `council/summariser-prompt.md` — Instructions for the synthesis step
-
-Discover available perspectives by globbing `council/perspectives/*.md`.
-Each file name (without extension) is the perspective ID.
-
-## HOW TO INVOKE ADVOCATES (OpenCode)
-
-For each perspective in a round:
-
-1. Read the perspective file: `council/perspectives/<id>.md`
-2. Construct a task prompt using the template from `council/workflow.md`,
-   inserting the perspective file content as the YOUR ROLE section
-3. Invoke via the Task tool with `run_in_background=true`
-4. Store the returned task_id
-5. After launching all advocates, collect results with
-   `background_output(task_id=...)` for each
-
-All advocates within a round MUST be invoked in parallel.
-Rounds remain sequential with user gates between them.
-
-## HOW TO INVOKE THE SUMMARISER (OpenCode)
-
-1. Construct the synthesis task prompt: combine the topic, all round
-   files, and the instructions from `council/summariser-prompt.md`
-2. Invoke via the Task tool (not background — wait for result)
-3. Write the result to `synthesis.md`
-
-When the user runs `/council`, begin the setup phase immediately.
-```
-
-Plus the command file (`.opencode/commands/council.md`) — unchanged from current.
-
-### Claude Code (`.claude/skills/council/SKILL.md`)
-
-```yaml
----
-name: council
-description: >
-  Run a structured multi-perspective debate on a technical decision.
-  Orchestrates advocate subagents, manages debate rounds, gates
-  transitions through user confirmation, and produces synthesis.
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
-argument-hint: "<topic>"
----
-
-You are the Council Moderator. You orchestrate structured
-multi-perspective debates to support human decision-making.
-
-## SHARED PROTOCOL
-
-Read and follow these files:
-- `council/workflow.md` — Workflow phases, rules, file conventions,
-  task prompt templates, manifest structure
-- `council/synthesis-format.md` — Synthesis output specification
-- `council/summariser-prompt.md` — Instructions for the synthesis step
-
-Discover available perspectives by globbing `council/perspectives/*.md`.
-Each file name (without extension) is the perspective ID.
-
-## HOW TO INVOKE ADVOCATES (Claude Code)
-
-For each perspective in a round:
-
-1. Read the perspective file: `council/perspectives/<id>.md`
-2. Construct a task prompt using the template from `council/workflow.md`,
-   inserting the perspective file content as the YOUR ROLE section
-3. Invoke via the Task tool with `run_in_background=true`
-   and `subagent_type=general-purpose`
-4. Store the returned output_file path
-5. After launching all advocates, read each output_file to collect results
-
-All advocates within a round MUST be invoked in parallel.
-Rounds remain sequential with user gates between them.
-
-## HOW TO INVOKE THE SUMMARISER (Claude Code)
-
-1. Construct the synthesis task prompt: combine the topic, all round
-   files, and the instructions from `council/summariser-prompt.md`
-2. Invoke via the Task tool with `subagent_type=general-purpose`
-   (not background — wait for result)
-3. Write the result to `synthesis.md`
-
-The user's topic is:
-
-$ARGUMENTS
-
-Start the setup phase.
-```
-
-### Cursor (`.cursor/commands/council.md`)
-
-```markdown
-You are the Council Moderator. You orchestrate structured
-multi-perspective debates to support human decision-making.
-
-## SHARED PROTOCOL
-
-Read and follow these files:
-- `council/workflow.md` — Workflow phases, rules, file conventions,
-  task prompt templates, manifest structure
-- `council/synthesis-format.md` — Synthesis output specification
-- `council/summariser-prompt.md` — Instructions for the synthesis step
-
-Discover available perspectives by globbing `council/perspectives/*.md`.
-Each file name (without extension) is the perspective ID.
-
-## HOW TO INVOKE ADVOCATES (Cursor)
-
-For each perspective in a round:
-
-1. Read the perspective file: `council/perspectives/<id>.md`
-2. Construct a task prompt using the template from `council/workflow.md`,
-   inserting the perspective file content as the YOUR ROLE section
-3. Spawn a subagent with the constructed prompt
-4. All advocates within a round should be invoked in parallel
-
-Rounds remain sequential with user gates between them.
-
-## HOW TO INVOKE THE SUMMARISER (Cursor)
-
-1. Construct the synthesis task prompt: combine the topic, all round
-   files, and the instructions from `council/summariser-prompt.md`
-2. Invoke as a subagent (not background — wait for result)
-3. Write the result to `synthesis.md`
-
-The user's topic is: {{input}}
-
-Start the setup phase.
-```
-
----
-
-## How Perspective Loading Works
-
-The moderator dynamically composes advocate prompts at runtime:
+## How It Works at Runtime
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│ Moderator reads council/perspectives/security.md        │
-│                                                         │
-│ Moderator reads council/workflow.md                     │
-│ → extracts Round 1 task prompt template                 │
-│                                                         │
-│ Moderator constructs task prompt:                       │
-│ ┌─────────────────────────────────────────────────────┐ │
-│ │ "You are participating in a structured council      │ │
-│ │  debate.                                            │ │
-│ │                                                     │ │
-│ │  PROPOSITION:                                       │ │
-│ │  [topic.md content]                                 │ │
-│ │                                                     │ │
-│ │  YOUR ROLE:                                         │ │
-│ │  [security.md content — loaded at runtime]          │ │
-│ │                                                     │ │
-│ │  INSTRUCTIONS:                                      │ │
-│ │  - Present your strongest arguments..."             │ │
-│ └─────────────────────────────────────────────────────┘ │
-│                                                         │
-│ Moderator spawns generic subagent with this prompt      │
-│ (using platform-specific mechanism)                     │
-└─────────────────────────────────────────────────────────┘
+User types: /council Should we migrate from REST to GraphQL?
+
+┌─────────────────────────────────────────────────────────────┐
+│ Platform discovers .claude/skills/council/SKILL.md          │
+│ Loads SKILL.md body as the moderator's prompt               │
+│ Passes "Should we migrate..." as $ARGUMENTS                 │
+├─────────────────────────────────────────────────────────────┤
+│ SETUP PHASE                                                 │
+│                                                             │
+│ Moderator reads references/workflow.md                      │
+│ Moderator globs perspectives/*.md → finds 3 perspectives    │
+│ Moderator frames proposition, proposes defaults              │
+│ User confirms: 2 rounds, all 3 perspectives                 │
+│ Moderator creates docs/council/active/<id>/council.yaml     │
+├─────────────────────────────────────────────────────────────┤
+│ ROUND 1                                                     │
+│                                                             │
+│ For each perspective (in parallel):                          │
+│   Moderator reads perspectives/<id>.md                      │
+│   Moderator constructs task prompt from workflow template    │
+│   ┌───────────────────────────────────────────────────────┐ │
+│   │ PROPOSITION: Should we migrate from REST to GraphQL?  │ │
+│   │ YOUR ROLE: [security.md content]                      │ │
+│   │ INSTRUCTIONS: Present your strongest arguments...     │ │
+│   └───────────────────────────────────────────────────────┘ │
+│   Moderator spawns background subagent with this prompt     │
+│                                                             │
+│ Moderator collects all 3 results                            │
+│ Moderator writes round-1-security.md, etc.                  │
+│ Moderator updates council.yaml                              │
+├─────────────────────────────────────────────────────────────┤
+│ GATE 1                                                      │
+│                                                             │
+│ Moderator presents 3-5 sentence summary per perspective     │
+│ User confirms → proceed to round 2                          │
+├─────────────────────────────────────────────────────────────┤
+│ ROUND 2 (same as round 1, but task prompt includes          │
+│          prior round files as PRIOR ARGUMENTS)              │
+├─────────────────────────────────────────────────────────────┤
+│ GATE 2 → User confirms → proceed to synthesis               │
+├─────────────────────────────────────────────────────────────┤
+│ SYNTHESIS                                                   │
+│                                                             │
+│ Moderator reads references/summariser-prompt.md             │
+│ Moderator reads references/synthesis-format.md              │
+│ Moderator constructs synthesis task prompt                   │
+│ Moderator spawns subagent (foreground, waits for result)    │
+│ Moderator writes synthesis.md                               │
+│ Moderator archives council                                  │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-This is the same thing the current moderator does with the task prompt templates — the only difference is that the perspective content comes from a shared file instead of being baked into a named agent's system prompt.
-
-### What This Changes
-
-| Aspect | Current (named agents) | Proposed (dynamic loading) |
-|--------|----------------------|---------------------------|
-| Advocate identity | Defined by agent file + frontmatter | Defined by perspective file content injected into task prompt |
-| Platform coupling | Each advocate file has platform-specific frontmatter | Perspective files have zero platform coupling |
-| Discovery | Moderator globs `.opencode/agents/advocate-*.md` | Moderator globs `council/perspectives/*.md` |
-| Adding perspectives | Create platform-specific agent file per platform | Create one markdown file in `council/perspectives/` |
-| Tool restrictions | Per-agent frontmatter (tools, permissions) | Inherited from moderator's Task tool invocation (subagents get default restrictions) |
-| Temperature | Per-agent YAML field | Not configurable per-perspective (prompt engineering handles differentiation) |
-
-### What Doesn't Change
-
-- The perspective content itself (identical to current advocate prompts)
-- The workflow protocol (5 phases, gates, round structure)
-- The synthesis format (6 sections)
-- The state model (council.yaml + round files)
-- The user experience (/council command, interactive gates)
+The entire flow is platform-agnostic. Each platform uses its own native mechanism for "spawn a background subagent" and "read a file," but the moderator prompt never references those mechanisms by name.
 
 ---
 
 ## Adding a New Perspective
 
-With the shared architecture, adding a perspective is a single-file operation:
-
-### Step 1: Create `council/perspectives/cost.md`
+### Step 1: Create `.claude/skills/council/perspectives/cost.md`
 
 ```markdown
 # Cost & Financial Advocate
@@ -632,79 +375,95 @@ You are the Cost and Financial Advocate in a decision council.
 Your role is to argue from a financial and resource allocation
 perspective.
 
-## Your Core Values
+## Your Perspective
 
-- Budget responsibility: every technical decision has financial implications
-- ROI thinking: investments should demonstrate clear returns
-- Opportunity cost: resources spent here can't be spent elsewhere
-- Total cost of ownership: consider implementation, maintenance, and opportunity costs
+You approach every decision through the lens of financial impact
+and resource efficiency. You are not balanced — you advocate for
+fiscal responsibility. Your job is to:
+
+1. Quantify costs (implementation, maintenance, opportunity)
+2. Surface hidden financial implications
+3. Challenge ROI assumptions
+4. Propose cost-effective alternatives
+5. Evaluate total cost of ownership
 
 ## How You Argue
-
-- Quantify costs wherever possible (even rough estimates are valuable)
-- Surface hidden costs (operational overhead, opportunity cost, switching costs)
-- Challenge ROI assumptions
-- Propose cost-effective alternatives
-
-[... remainder of perspective definition ...]
+[... same structure as other perspectives ...]
 ```
 
 ### Step 2: There is no step 2.
 
-The moderator on any platform will discover the new file via `council/perspectives/*.md` glob and present it during setup. No platform-specific files need to be created or updated.
+The moderator discovers perspectives via glob. The new file appears on all three platforms immediately.
 
 ---
 
-## Trade-offs and Limitations
+## Platform-Specific Considerations
 
-### What You Lose
+### Argument Passing
 
-**Per-perspective temperature control.** OpenCode's current architecture lets you set `temperature: 0.3` for security and `temperature: 0.5` for velocity. With dynamic loading into generic subagents, all advocates run at the same temperature. In practice, temperature has less effect on perspective differentiation than the prompt content itself — the advocate's stated values, argumentation strategies, and tone guidelines are what drive distinct perspectives, not randomness settings.
+| Platform | Skill argument mechanism | `$ARGUMENTS` supported? |
+|----------|-------------------------|-------------------------|
+| Claude Code | `$ARGUMENTS` placeholder in SKILL.md | Yes (native) |
+| OpenCode | `$ARGUMENTS` placeholder | Yes (native) |
+| Cursor | Arguments passed to skill context | Yes (via compat layer) |
 
-**Per-perspective tool restrictions.** Named agents can have individually scoped tool access (e.g., security gets `head` and `tail`, velocity doesn't). With generic subagents, all advocates inherit the same tool set. This is acceptable because advocates are read-only analysts — they don't need differentiated tool access.
+If Cursor's skill system doesn't expand `$ARGUMENTS` literally, the user's topic still appears in the conversation context. The moderator prompt's final line ("$ARGUMENTS") acts as a signal to use whatever topic text is available. This is a graceful degradation, not a failure.
 
-**Per-perspective model selection.** Cursor allows specifying different models per named subagent. Dynamic loading into generic subagents uses whichever model the moderator's Task tool defaults to. If model mixing is important, you'd need to extend the moderator prompt to pass model hints when spawning subagents (platform-dependent).
+### Subagent Spawning
 
-### What You Gain
+The moderator prompt says "spawn a background subagent." Each platform interprets this using its native mechanism:
 
-**Zero duplication.** Each perspective is written and maintained once. A fix to the security advocate's argumentation strategy propagates to all platforms immediately.
+| Platform | What "spawn a background subagent" translates to |
+|----------|--------------------------------------------------|
+| Claude Code | `Task(subagent_type="general-purpose", run_in_background=true)` |
+| OpenCode | `Task(run_in_background=true)` via built-in task tool |
+| Cursor | Native parallel subagent spawning |
 
-**Simpler extensibility.** Adding a new perspective is one file. No need to understand three different frontmatter formats.
+The prompt does not prescribe the mechanism. The agent uses whatever subagent tool is available. All three platforms support parallel subagent execution sufficient for 3-7 concurrent advocates.
 
-**Cleaner separation of concerns.** Perspective content (what to argue) is fully decoupled from orchestration mechanics (how to invoke the agent). The moderator owns orchestration; perspective files own content.
+### Parallel Execution Limits
 
-**Easier testing.** You can validate a perspective file by reading it — no need to test platform-specific agent registration, tool permissions, or naming conflicts.
+| Platform | Max concurrent subagents | Sufficient for council? |
+|----------|-------------------------|------------------------|
+| Claude Code | ~7 | Yes |
+| OpenCode | Framework-dependent | Yes (typically 5+) |
+| Cursor | ~8 (via git worktrees) | Yes |
 
-### Hybrid Option: Named Agents That Reference Shared Perspectives
+### Skill Discovery Path Priority
 
-If per-perspective tool restrictions or model selection are important, you can use a hybrid approach where platform-specific agent files exist but contain only frontmatter plus a reference to the shared content:
+If the same skill name exists in multiple locations, platform-specific paths take priority:
 
-```yaml
-# .claude/agents/advocate-security.md
+| Platform | Priority order |
+|----------|---------------|
+| Claude Code | `.claude/skills/` (only reads its own path) |
+| OpenCode | `.opencode/skills/` > `.claude/skills/` > `.agents/skills/` |
+| Cursor | `.cursor/skills/` > `.claude/skills/` |
+
+This means you can **override** the shared skill for a specific platform by placing a modified copy in the platform-specific directory, while the `.claude/skills/` version serves as the default.
+
+### Temperature and Model Selection
+
+The Agent Skills standard does not include `temperature` or `model` fields (these are Claude Code extensions). All advocates run at the platform's default temperature and model. Perspective differentiation comes from the prompt content, not sampling parameters.
+
+Claude Code's extended fields (`allowed-tools`, `argument-hint`, `context`, `model`) are silently ignored by OpenCode and Cursor per the spec's forward-compatibility rule.
+
 ---
-name: advocate-security
-description: Security advocate for council debates
-tools: Read, Glob, Grep, Bash(cat *), Bash(ls *)
-model: opus
----
 
-Read and follow the perspective definition in `council/perspectives/security.md`.
-Apply it to the task you've been given.
-```
+## Comparison to Alternatives
 
-This keeps per-perspective configuration (model, tools) while avoiding prompt duplication. The perspective content still lives in one place.
+| Approach | Platform-specific files | Perspective duplication | New perspective effort | Moderator duplication |
+|----------|------------------------|------------------------|----------------------|-----------------------|
+| **Current** (OpenCode-only agents) | 6 (agents + command) | N/A (single platform) | 1 agent file | N/A |
+| **Naive port** (per-platform agents) | 6 per platform (18 total) | 3x per perspective | 3 files | 3x moderator prompt |
+| **Previous proposal** (shared perspectives + platform wrappers) | 1 per platform (3 total) | None | 1 file | ~60% shared, 40% per-platform |
+| **Single skill** (this proposal) | 0 | None | 1 file | None |
 
-The trade-off is that you're back to creating one agent file per perspective per platform — but each is ~5 lines of frontmatter + a one-line reference, not 80 lines of duplicated content.
+The single-skill approach achieves **zero platform-specific files** and **zero duplication** by leveraging the Agent Skills standard's cross-platform discovery. The entire council — moderator, perspectives, workflow protocol, synthesis format — lives in one directory that all three platforms read natively.
 
----
+### When You Might Still Want Platform-Specific Files
 
-## Summary
+- **OpenCode `temperature` tuning**: If per-advocate temperature control matters, keep an `.opencode/agents/council-moderator.md` with `temperature: 0.2` alongside the skill. The agent file handles orchestration config; the skill provides the perspectives.
+- **Cursor model mixing**: If you want different models per advocate, a `.cursor/agents/` override can specify `model` per subagent.
+- **Platform-specific hooks**: Validation hooks (e.g., manifest schema checking) use platform-specific config files (`.claude/settings.json`, `.cursor/hooks.json`).
 
-| | Files per perspective | Perspective duplication | New perspective effort |
-|-|----------------------|------------------------|----------------------|
-| **Current** (named agents, single platform) | 1 | None (single platform) | 1 file |
-| **Naive port** (named agents, 3 platforms) | 3 | 3x (full prompt in each) | 3 files |
-| **Dynamic loading** (proposed) | 1 shared | None | 1 file |
-| **Hybrid** (named agents referencing shared) | 1 shared + 1 thin wrapper per platform | None (content in shared file) | 1 shared + N wrappers |
-
-The dynamic loading approach is recommended for teams that don't need per-perspective model or tool differentiation. The hybrid approach is better when you want platform-specific agent configuration without duplicating prompt content.
+These are **optional enhancements**, not requirements. The skill works without them.
