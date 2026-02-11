@@ -47,9 +47,9 @@ The council is implemented as a single skill directory. Everything lives in one 
 │   ├── synthesis-format.md         # 6-section synthesis output spec
 │   └── summariser-prompt.md        # Instructions for the synthesis step
 └── perspectives/
-    ├── security.md                 # Security & compliance advocate
-    ├── velocity.md                 # Speed & pragmatism advocate
-    └── maintainability.md          # Long-term code health advocate
+    ├── security.md                 # Security & compliance perspective
+    ├── velocity.md                 # Speed & pragmatism perspective
+    └── maintainability.md          # Long-term code health perspective
 ```
 
 This is the **entire implementation**. No per-platform wrappers, no generated files, no build step. The skill directory is committed to the repo and discovered by all three platforms.
@@ -71,7 +71,7 @@ The current OpenCode implementation uses `.opencode/agents/council-moderator.md`
 |-|--------------------------|-------------------|
 | Entry point | `/council` via command file | `/council` via skill discovery |
 | Moderator prompt | Baked into agent file | SKILL.md body |
-| Advocate prompts | Separate agent files | Reference files in skill directory |
+| Perspective prompts | Separate agent files | Reference files in skill directory |
 | OpenCode-specific files | 6 files (.opencode/agents/ + .opencode/commands/) | 0 files |
 
 OpenCode discovers skills from `.claude/skills/` and exposes them as `/council` in its command menu. The migration path is: keep the existing `.opencode/` files during transition, then remove them once the skill is validated.
@@ -87,7 +87,7 @@ OpenCode discovers skills from `.claude/skills/` and exposes them as `/council` 
 │   ├── workflow.md                 # ← Workflow protocol (phases, rules, templates)
 │   ├── synthesis-format.md         # ← Synthesis output specification
 │   └── summariser-prompt.md        # ← Summariser instructions
-└── perspectives/                   # ← Advocate perspective definitions
+└── perspectives/                   # ← Perspective definitions
     ├── security.md                 #    Each file = one perspective
     ├── velocity.md                 #    No frontmatter, pure prompt content
     └── maintainability.md          #    Filename = perspective ID
@@ -111,7 +111,7 @@ Platform-specific files: **zero**.
 name: council
 description: >
   Run a structured multi-perspective debate on a technical decision.
-  Spawns advocate subagents that argue from different perspectives,
+  Spawns perspective subagents that argue from different viewpoints,
   manages debate rounds with user gate checkpoints between them,
   and produces a structured synthesis. Use when facing architectural
   decisions, technology choices, or trade-off analysis.
@@ -215,9 +215,9 @@ Each perspective is a standalone markdown file with no frontmatter. The moderato
 ### `perspectives/security.md`
 
 ```markdown
-# Security & Compliance Advocate
+# Security & Compliance Perspective
 
-You are the Security and Compliance Advocate in a decision council.
+You are the Security and Compliance Perspective in a decision council.
 Your role is to represent the cautious, risk-aware perspective that
 prioritises security, compliance, and risk mitigation above other
 considerations.
@@ -277,7 +277,7 @@ advocate strongly for the security viewpoint. Your job is to:
 
 ### `perspectives/velocity.md` and `perspectives/maintainability.md`
 
-Same structure, different content. Each defines: perspective values, argumentation strategy, key focus areas, multi-round engagement rules, tone, and response format. See the existing OpenCode advocate files for the full content — the body transfers directly, minus the YAML frontmatter.
+Same structure, different content. Each defines: perspective values, argumentation strategy, key focus areas, multi-round engagement rules, tone, and response format. See the existing OpenCode perspective files for the full content — the body transfers directly, minus the YAML frontmatter.
 
 ---
 
@@ -369,9 +369,9 @@ The entire flow is platform-agnostic. Each platform uses its own native mechanis
 ### Step 1: Create `.claude/skills/council/perspectives/cost.md`
 
 ```markdown
-# Cost & Financial Advocate
+# Cost & Financial Perspective
 
-You are the Cost and Financial Advocate in a decision council.
+You are the Cost and Financial Perspective in a decision council.
 Your role is to argue from a financial and resource allocation
 perspective.
 
@@ -419,7 +419,7 @@ The moderator prompt says "spawn a background subagent." Each platform interpret
 | OpenCode | `Task(run_in_background=true)` via built-in task tool |
 | Cursor | Native parallel subagent spawning |
 
-The prompt does not prescribe the mechanism. The agent uses whatever subagent tool is available. All three platforms support parallel subagent execution sufficient for 3-7 concurrent advocates.
+The prompt does not prescribe the mechanism. The agent uses whatever subagent tool is available. All three platforms support parallel subagent execution sufficient for 3-7 concurrent perspectives.
 
 ### Parallel Execution Limits
 
@@ -443,7 +443,7 @@ This means you can **override** the shared skill for a specific platform by plac
 
 ### Temperature and Model Selection
 
-The Agent Skills standard does not include `temperature` or `model` fields (these are Claude Code extensions). All advocates run at the platform's default temperature and model. Perspective differentiation comes from the prompt content, not sampling parameters.
+The Agent Skills standard does not include `temperature` or `model` fields (these are Claude Code extensions). All perspectives run at the platform's default temperature and model. Perspective differentiation comes from the prompt content, not sampling parameters.
 
 Claude Code's extended fields (`allowed-tools`, `argument-hint`, `context`, `model`) are silently ignored by OpenCode and Cursor per the spec's forward-compatibility rule.
 
@@ -462,8 +462,8 @@ The single-skill approach achieves **zero platform-specific files** and **zero d
 
 ### When You Might Still Want Platform-Specific Files
 
-- **OpenCode `temperature` tuning**: If per-advocate temperature control matters, keep an `.opencode/agents/council-moderator.md` with `temperature: 0.2` alongside the skill. The agent file handles orchestration config; the skill provides the perspectives.
-- **Cursor model mixing**: If you want different models per advocate, a `.cursor/agents/` override can specify `model` per subagent.
+- **OpenCode `temperature` tuning**: If per-perspective temperature control matters, keep an `.opencode/agents/council-moderator.md` with `temperature: 0.2` alongside the skill. The agent file handles orchestration config; the skill provides the perspectives.
+- **Cursor model mixing**: If you want different models per perspective, a `.cursor/agents/` override can specify `model` per subagent.
 - **Platform-specific hooks**: Validation hooks (e.g., manifest schema checking) use platform-specific config files (`.claude/settings.json`, `.cursor/hooks.json`).
 
 These are **optional enhancements**, not requirements. The skill works without them.

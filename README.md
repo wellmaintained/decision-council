@@ -26,10 +26,10 @@ Instead of a single AI's opinion, you get:
 The moderator will:
 1. Frame the proposition clearly
 2. Identify available perspectives (security, velocity, maintainability, etc.)
-3. Orchestrate 2 rounds of debate (all advocates per round execute in parallel)
+3. Orchestrate 2 rounds of debate (all perspectives per round execute in parallel)
 4. Present synthesis with recommendations
 
-**Typical duration:** 2-3 minutes for 2 rounds, 3 advocates
+**Typical duration:** 2-3 minutes for 2 rounds, 3 perspectives
 
 ---
 
@@ -67,9 +67,9 @@ After debating "Should we adopt GraphQL for our API?", you'll get a synthesis co
 You provide a proposition. Moderator confirms framing and perspectives.
 
 ### 2. Debate Rounds
-- **Round 1:** All advocates make their strongest case (parallel execution)
+- **Round 1:** All perspectives make their strongest case (parallel execution)
 - **Gate:** You review summaries, decide to continue
-- **Round 2:** Advocates respond to each other (parallel execution)
+- **Round 2:** Perspectives respond to each other (parallel execution)
 - **Gate:** You review, decide to synthesize
 
 ### 3. Synthesis
@@ -87,13 +87,13 @@ Built on [OpenCode](https://opencode.sh) agent framework using markdown configur
 **Agents:**
 - `council-moderator` (primary) — Neutral orchestrator
 - `council-summariser` (hidden subagent) — Produces synthesis
-- `advocate-security` — Risk-focused perspective
-- `advocate-velocity` — Speed-focused perspective
-- `advocate-maintainability` — Quality-focused perspective
+- `perspective-security` — Risk-focused perspective
+- `perspective-velocity` — Speed-focused perspective
+- `perspective-maintainability` — Quality-focused perspective
 
-**Custom perspectives:** Add `.opencode/agents/advocate-<name>.md` for your domain
+**Custom perspectives:** Add `.opencode/agents/perspective-<name>.md` for your domain
 
-**Performance:** Parallel execution within rounds reduces time by ~67% (3 advocates: 3min → 1min per round)
+**Performance:** Parallel execution within rounds reduces time by ~67% (3 perspectives: 3min → 1min per round)
 
 ---
 
@@ -103,7 +103,7 @@ Built on [OpenCode](https://opencode.sh) agent framework using markdown configur
 
 ### Key Specs
 - [Workflow](docs/specs/workflow.md) — 5-phase council lifecycle
-- [Parallel Execution](docs/specs/parallel-execution.md) — How advocates run simultaneously
+- [Parallel Execution](docs/specs/parallel-execution.md) — How perspectives run simultaneously
 - [Synthesis Format](docs/specs/synthesis.md) — Output structure and guidelines
 - [Extending](docs/specs/extending.md) — Add custom perspectives
 
@@ -155,7 +155,7 @@ cd decision-council
 
 What works:
 - ✅ Interactive setup with proposition framing
-- ✅ Parallel advocate execution per round (60-70% faster)
+- ✅ Parallel perspective execution per round (60-70% faster)
 - ✅ Multi-round debates with user gates
 - ✅ Structured 6-section synthesis
 - ✅ Custom perspective support
@@ -163,7 +163,7 @@ What works:
 
 What's planned:
 - Preset council types (architecture, adoption, incident, hire)
-- Blind visibility mode (advocates don't see others' round 1)
+- Blind visibility mode (perspectives don't see others' round 1)
 - Resume support for interrupted councils
 - MCP integration for external data sources
 

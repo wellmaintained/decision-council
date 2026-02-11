@@ -44,14 +44,14 @@ Council is designed for **consequential technical decisions** where:
 ### 1. Setup (Interactive)
 You provide a proposition. The moderator:
 - Frames it clearly
-- Identifies available advocate perspectives
+- Identifies available perspectives
 - Confirms debate parameters (rounds, perspectives)
 
 ### 2. Debate Rounds
 For each round:
-- **All advocates respond simultaneously** (parallel execution for speed)
+- **All perspectives respond simultaneously** (parallel execution for speed)
 - Round 1: Each perspective makes its strongest case
-- Round 2+: Advocates respond to each other, refine positions, concede valid points
+- Round 2+: Perspectives respond to each other, refine positions, concede valid points
 
 ### 3. Gate Checkpoints
 After each round, the moderator:
@@ -81,7 +81,7 @@ The entire debate (all rounds, synthesis) is archived for future reference.
 /generate-council
 ```
 
-The generator reads your project's codebase, tech stack, and MCP servers, asks a few questions, then scaffolds advocate agents tailored to your domain. Run this once to set up, then re-run whenever the project evolves.
+The generator reads your project's codebase, tech stack, and MCP servers, asks a few questions, then scaffolds perspective agents tailored to your domain. Run this once to set up, then re-run whenever the project evolves.
 
 ### Run a council debate
 
@@ -90,8 +90,8 @@ The generator reads your project's codebase, tech stack, and MCP servers, asks a
 ```
 
 The moderator will guide you through setup, then orchestrate the debate. Typical council duration:
-- **2 rounds, 3 advocates:** ~2-3 minutes
-- **3 rounds, 5 advocates:** ~4-5 minutes
+- **2 rounds, 3 perspectives:** ~2-3 minutes
+- **3 rounds, 5 perspectives:** ~4-5 minutes
 
 ---
 
@@ -101,12 +101,12 @@ The moderator will guide you through setup, then orchestrate the debate. Typical
 
 | Component | Role | Mode |
 |-----------|------|------|
-| **council-generator** | Analyzes project, scaffolds tailored advocate agents | Primary agent |
+| **council-generator** | Analyzes project, scaffolds tailored perspective agents | Primary agent |
 | **council-moderator** | Orchestrates entire workflow, neutral facilitator | Primary agent |
 | **council-summariser** | Produces synthesis from debate rounds | Hidden subagent |
-| **advocate-\*** | Perspective agents (generated per-project) | Subagent |
+| **perspective-\*** | Perspective agents (generated per-project) | Subagent |
 
-The default advocates (security, velocity, maintainability) ship as examples. Use `/generate-council` to create advocates tailored to your project's domain, tech stack, and data sources.
+The default perspectives (security, velocity, maintainability) ship as examples. Use `/generate-council` to create perspectives tailored to your project's domain, tech stack, and data sources.
 
 ### Debate Structure
 
@@ -115,11 +115,11 @@ User → /council <topic>
   ↓
 Moderator: Setup (proposition framing, perspective selection)
   ↓
-Round 1: All advocates argue simultaneously (parallel)
+Round 1: All perspectives argue simultaneously (parallel)
   ↓
 Gate 1: User reviews round 1, decides to continue
   ↓
-Round 2: All advocates respond to each other (parallel)
+Round 2: All perspectives respond to each other (parallel)
   ↓
 Gate 2: User reviews round 2, decides to synthesize
   ↓
@@ -131,9 +131,9 @@ Archive: Complete debate preserved for reference
 ### Performance
 
 **Parallel execution within rounds:**
-- 3 advocates complete a round in ~1 minute (vs ~3 minutes sequential)
+- 3 perspectives complete a round in ~1 minute (vs ~3 minutes sequential)
 - Rounds remain sequential with user gates for control
-- Total debate time scales with rounds, not advocates
+- Total debate time scales with rounds, not perspectives
 
 ---
 
@@ -153,15 +153,15 @@ All council state lives in markdown and YAML files under `docs/council/`. This m
 - Easy to inspect, archive, or share
 
 ### Agent-Agnostic Perspectives
-The moderator doesn't care what perspectives you use. You bring your own advocate agents. This makes the system:
+The moderator doesn't care what perspectives you use. You bring your own perspective agents. This makes the system:
 - Adaptable to any domain (not just engineering)
-- Extensible by users (add `advocate-cost.md`, done)
+- Extensible by users (add `perspective-cost.md`, done)
 - Composable (different perspective sets for different decisions)
 
 ### Parallel Execution for Speed
-All advocates within a round execute simultaneously. This maximizes throughput while maintaining:
+All perspectives within a round execute simultaneously. This maximizes throughput while maintaining:
 - Sequential rounds for human control
-- Consistent input (all advocates see same prior rounds)
+- Consistent input (all perspectives see same prior rounds)
 - Clean output (no race conditions on file writes)
 
 ---
@@ -171,10 +171,10 @@ All advocates within a round execute simultaneously. This maximizes throughput w
 ### Specifications
 
 - **[Workflow](specs/workflow.md)** — Detailed breakdown of the 5-phase council lifecycle
-- **[Parallel Execution](specs/parallel-execution.md)** — How advocates run simultaneously within rounds
+- **[Parallel Execution](specs/parallel-execution.md)** — How perspectives run simultaneously within rounds
 - **[Synthesis Format](specs/synthesis.md)** — Structure and guidelines for synthesis documents
 - **[File Formats](specs/file-formats.md)** — Council manifest, round files, and frontmatter schemas
-- **[Extending](specs/extending.md)** — How to add custom advocate perspectives
+- **[Extending](specs/extending.md)** — How to add custom perspectives
 
 ### For Developers
 
@@ -210,7 +210,7 @@ All advocates within a round execute simultaneously. This maximizes throughput w
 ## Current Limitations
 
 **Open visibility only:**  
-Advocates always see prior round contributions from other perspectives. "Blind mode" (independent arguments without cross-pollination) is not yet supported.
+Perspectives always see prior round contributions from other perspectives. "Blind mode" (independent arguments without cross-pollination) is not yet supported.
 
 **No resume support:**  
 If a council is interrupted, you must start a new one. The manifest and completed round files remain intact for reference.
@@ -219,7 +219,7 @@ If a council is interrupted, you must start a new one. The manifest and complete
 All rounds use the same format. Dynamic round structures (e.g., "rebuttal round", "convergence round") are not yet supported.
 
 **MCP integration is manual:**
-The generator can wire MCP servers to relevant advocates when detected, but you must configure MCP servers in `.opencode/config.yaml` first.
+The generator can wire MCP servers to relevant perspectives when detected, but you must configure MCP servers in `.opencode/config.yaml` first.
 
 ---
 
@@ -227,7 +227,7 @@ The generator can wire MCP servers to relevant advocates when detected, but you 
 
 ### Planned Features (v0.6+)
 
-- **Blind visibility mode:** Advocates argue independently in round 1, see others in round 2+
+- **Blind visibility mode:** Perspectives argue independently in round 1, see others in round 2+
 - **Dynamic round structures:** Specialized round types for convergence, escalation, etc.
 - **Resume support:** Continue interrupted councils from their last completed round
 
