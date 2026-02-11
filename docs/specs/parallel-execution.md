@@ -6,10 +6,10 @@
 
 ## The Model
 
-**Within each round:** All advocates execute simultaneously (parallel)  
+**Within each round:** All perspectives execute simultaneously (parallel)
 **Between rounds:** Sequential with user gates (control)
 
-This balances **speed** (don't wait for advocate A before B starts) with **control** (review round N before round N+1 begins).
+This balances **speed** (don't wait for perspective A before B starts) with **control** (review round N before round N+1 begins).
 
 ---
 
@@ -26,7 +26,7 @@ Round 1:
 Total: 3 minutes
 ```
 
-You sit idle while each advocate finishes. Adding a 4th advocate adds another minute.
+You sit idle while each perspective finishes. Adding a 4th perspective adds another minute.
 
 ### The Parallel Solution
 
@@ -34,20 +34,20 @@ You sit idle while each advocate finishes. Adding a 4th advocate adds another mi
 ```
 Round 1:
   Security, Velocity, Maintainability all write simultaneously
-Total: ~1 minute (longest advocate)
+Total: ~1 minute (longest perspective)
 ```
 
-Adding a 4th advocate doesn't change duration—still ~1 minute.
+Adding a 4th perspective doesn't change duration—still ~1 minute.
 
 ### Performance Impact
 
-| Advocates | Sequential | Parallel | Time Saved |
+| Perspectives | Sequential | Parallel | Time Saved |
 |-----------|------------|----------|------------|
 | 2 | 2 min | 1 min | 50% |
 | 3 | 3 min | 1 min | 67% |
 | 5 | 5 min | 1-2 min | 60-80% |
 
-**For a 2-round council with 3 advocates:**
+**For a 2-round council with 3 perspectives:**
 - Sequential: ~6 minutes
 - Parallel: ~2 minutes
 - **4 minutes saved**
@@ -58,11 +58,11 @@ Adding a 4th advocate doesn't change duration—still ~1 minute.
 
 ### Round Dependencies
 
-Round 2 advocates **need** to see round 1 results:
+Round 2 perspectives **need** to see round 1 results:
 - Security's round 2 argument responds to velocity's round 1 concerns
 - Velocity's round 2 refines its position based on maintainability's round 1 evidence
 
-If all rounds launched simultaneously, advocates would argue in isolation—no cross-pollination, no refinement.
+If all rounds launched simultaneously, perspectives would argue in isolation—no cross-pollination, no refinement.
 
 ### User Control
 
@@ -88,7 +88,7 @@ For each perspective in current round:
   4. Update manifest: perspective marked "in-progress" with task_id
 ```
 
-**Result:** All advocates start thinking simultaneously.
+**Result:** All perspectives start thinking simultaneously.
 
 ### 2. Collection Phase
 
@@ -132,9 +132,9 @@ perspectives:
 
 ### No File Conflicts
 
-**Problem:** What if two advocates try to write the same file?
+**Problem:** What if two perspectives try to write the same file?
 
-**Solution:** Each advocate writes to a **unique file**: `round-<N>-<perspective>.md`
+**Solution:** Each perspective writes to a **unique file**: `round-<N>-<perspective>.md`
 - Security writes: `round-1-security.md`
 - Velocity writes: `round-1-velocity.md`
 
@@ -142,22 +142,22 @@ No possibility of conflict.
 
 ### No Manifest Conflicts
 
-**Problem:** What if two advocates update the manifest simultaneously?
+**Problem:** What if two perspectives update the manifest simultaneously?
 
-**Solution:** Manifest is updated **by the moderator**, not advocates:
-1. Moderator launches all advocates (no manifest writes during execution)
-2. Advocates execute (only write their round files)
+**Solution:** Manifest is updated **by the moderator**, not perspectives:
+1. Moderator launches all perspectives (no manifest writes during execution)
+2. Perspectives execute (only write their round files)
 3. Moderator collects results and updates manifest atomically
 
 ### Consistent Input
 
-**Problem:** What if advocates see different prior round states?
+**Problem:** What if perspectives see different prior round states?
 
-**Solution:** All advocates receive **identical prior round files**:
-- Round 1: All advocates see only the proposition (no prior rounds exist)
-- Round 2: All advocates see **completed** round 1 files
+**Solution:** All perspectives receive **identical prior round files**:
+- Round 1: All perspectives see only the proposition (no prior rounds exist)
+- Round 2: All perspectives see **completed** round 1 files
 
-No advocate sees another's in-progress round N response—only completed round N-1.
+No perspective sees another's in-progress round N response—only completed round N-1.
 
 ---
 
@@ -165,48 +165,48 @@ No advocate sees another's in-progress round N response—only completed round N
 
 ### Launch Failures
 
-**Scenario:** Task tool fails to invoke an advocate (bad config, permission error)
+**Scenario:** Task tool fails to invoke a perspective (bad config, permission error)
 
 **Moderator response:**
 ```
-"Failed to launch advocate-security for round 1: [error message]
+"Failed to launch perspective-security for round 1: [error message]
 
 Options:
-1. Retry advocate-security
+1. Retry perspective-security
 2. Skip security perspective for this round
 3. Cancel entire round
 
 What would you like to do?"
 ```
 
-**Result:** Other advocates' tasks continue running. You decide per-failure.
+**Result:** Other perspectives' tasks continue running. You decide per-failure.
 
 ### Execution Failures
 
-**Scenario:** `background_output` returns error (advocate timeout, prompt error, model failure)
+**Scenario:** `background_output` returns error (perspective timeout, prompt error, model failure)
 
 **Moderator response:**
 ```
-"advocate-velocity failed during round 1 execution: [error message]
+"perspective-velocity failed during round 1 execution: [error message]
 
 Options:
-1. Retry advocate-velocity for round 1
+1. Retry perspective-velocity for round 1
 2. Continue with security and maintainability only
 3. Cancel entire round
 
 What would you like to do?"
 ```
 
-**Result:** Successful advocates' results are preserved. Granular recovery.
+**Result:** Successful perspectives' results are preserved. Granular recovery.
 
 ### Partial Completion
 
-**Scenario:** 2 of 3 advocates succeed, 1 fails
+**Scenario:** 2 of 3 perspectives succeed, 1 fails
 
 **Moderator response:**
 ```
 "Round 1 complete for security and maintainability.
-advocate-velocity failed: [error message]
+perspective-velocity failed: [error message]
 
 Continue with 2 perspectives, or retry velocity?"
 ```
@@ -220,25 +220,25 @@ Continue with 2 perspectives, or retry velocity?"
 ### Token Cost
 
 **Parallel execution does NOT increase token cost:**
-- Same number of advocates
+- Same number of perspectives
 - Same number of rounds
 - Same amount of text generated
 
-**What changes:** Cost accumulates **faster** (all advocates billing simultaneously).
+**What changes:** Cost accumulates **faster** (all perspectives billing simultaneously).
 
 ### Cost Visibility
 
 **Sequential:**
 ```
-Advocate A: $0.10 → done
-Advocate B: $0.10 → done
-Advocate C: $0.10 → done
+Perspective A: $0.10 → done
+Perspective B: $0.10 → done
+Perspective C: $0.10 → done
 Total: $0.30 over 3 minutes
 ```
 
 **Parallel:**
 ```
-All advocates simultaneously: $0.30
+All perspectives simultaneously: $0.30
 Total: $0.30 in 1 minute
 ```
 
@@ -251,7 +251,7 @@ Same cost, faster accumulation. If you're monitoring spend in real-time, paralle
 ### Parallel Per Round (Current)
 
 ```
-Setup → Round 1 (parallel advocates) → Gate 1 → Round 2 (parallel advocates) → Gate 2 → Synthesis
+Setup → Round 1 (parallel perspectives) → Gate 1 → Round 2 (parallel perspectives) → Gate 2 → Synthesis
 ```
 
 **Pros:**
@@ -265,7 +265,7 @@ Setup → Round 1 (parallel advocates) → Gate 1 → Round 2 (parallel advocate
 ### Fully Parallel (Rejected)
 
 ```
-Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesis
+Setup → All Rounds (parallel perspectives × rounds) → Single Gate → Synthesis
 ```
 
 **Pros:**
@@ -273,7 +273,7 @@ Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesi
 
 **Cons:**
 - No mid-debate control
-- Round 2 advocates must predict what round 2 will contain (can't see actual round 1)
+- Round 2 perspectives must predict what round 2 will contain (can't see actual round 1)
 - Can't conclude early if consensus emerges
 - Harder to redirect if debate drifts
 
@@ -283,9 +283,9 @@ Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesi
 
 ## Performance Characteristics
 
-### Best Case (All Advocates Similar Speed)
+### Best Case (All Perspectives Similar Speed)
 
-3 advocates, 2 rounds:
+3 perspectives, 2 rounds:
 - Round 1: 1 minute (all finish ~same time)
 - Gate 1: 2 minutes (you review)
 - Round 2: 1 minute (all finish ~same time)
@@ -294,12 +294,12 @@ Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesi
 
 **Total: ~6.5 minutes** (vs ~12 minutes sequential)
 
-### Worst Case (One Slow Advocate)
+### Worst Case (One Slow Perspective)
 
-3 advocates, 2 rounds:
-- Round 1: 2 minutes (one advocate takes longer)
+3 perspectives, 2 rounds:
+- Round 1: 2 minutes (one perspective takes longer)
 - Gate 1: 2 minutes
-- Round 2: 2 minutes (same advocate still slower)
+- Round 2: 2 minutes (same perspective still slower)
 - Gate 2: 2 minutes
 - Synthesis: 30 seconds
 
@@ -307,10 +307,10 @@ Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesi
 
 ### Scaling
 
-**Adding advocates:** Minimal impact on time (parallel execution)
+**Adding perspectives:** Minimal impact on time (parallel execution)
 **Adding rounds:** Linear impact on time (sequential rounds)
 
-**Implication:** A 5-advocate, 2-round council takes roughly the same time as a 3-advocate, 2-round council.
+**Implication:** A 5-perspective, 2-round council takes roughly the same time as a 3-perspective, 2-round council.
 
 ---
 
@@ -318,7 +318,7 @@ Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesi
 
 ### Staggered Starts
 
-**Idea:** Add small delays between advocate launches to avoid "thundering herd"
+**Idea:** Add small delays between perspective launches to avoid "thundering herd"
 
 **Benefit:** Reduces instantaneous load on OpenCode task scheduler
 
@@ -326,15 +326,15 @@ Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesi
 
 ### Timeout Detection
 
-**Idea:** Detect advocates taking unusually long and offer to cancel/retry
+**Idea:** Detect perspectives taking unusually long and offer to cancel/retry
 
-**Benefit:** Don't wait 5 minutes for a stuck advocate
+**Benefit:** Don't wait 5 minutes for a stuck perspective
 
 **Implementation:** Track task duration, prompt user if exceeds threshold
 
 ### Progress Indicators
 
-**Idea:** Show which advocates are still in-progress during parallel execution
+**Idea:** Show which perspectives are still in-progress during parallel execution
 
 **Benefit:** Transparency ("Security and maintainability done, waiting on velocity")
 
@@ -346,22 +346,22 @@ Setup → All Rounds (parallel advocates × rounds) → Single Gate → Synthesi
 
 ### When Parallel Execution Matters Most
 
-- **Many advocates:** 5+ perspectives benefit significantly from parallelism
-- **Fast models:** If advocates finish in 30-60 seconds, parallel saves more time
+- **Many perspectives:** 5+ perspectives benefit significantly from parallelism
+- **Fast models:** If perspectives finish in 30-60 seconds, parallel saves more time
 - **Multiple rounds:** Savings compound across rounds
 
 ### When It Matters Less
 
-- **Few advocates:** 2 advocates, parallel saves only ~1 minute
-- **Slow models:** If advocates take 5+ minutes each, parallel vs sequential is less noticeable
+- **Few perspectives:** 2 perspectives, parallel saves only ~1 minute
+- **Slow models:** If perspectives take 5+ minutes each, parallel vs sequential is less noticeable
 - **Single round:** Only one opportunity for parallel execution
 
 ### Monitoring Execution
 
 Watch for:
-- **One advocate consistently slow:** Check agent prompt complexity
+- **One perspective consistently slow:** Check agent prompt complexity
 - **Frequent failures:** Check agent configurations and permissions
-- **High variance:** Some advocates may need temperature adjustments
+- **High variance:** Some perspectives may need temperature adjustments
 
 ---
 
@@ -369,4 +369,4 @@ Watch for:
 
 - **[Workflow](workflow.md):** Understand the full 5-phase council lifecycle
 - **[File Formats](file-formats.md):** Learn how task_id is tracked in manifests
-- **[Extending](extending.md):** Add custom advocates that execute efficiently
+- **[Extending](extending.md):** Add custom perspectives that execute efficiently

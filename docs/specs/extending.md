@@ -4,35 +4,55 @@
 
 ---
 
-## Adding Custom Advocate Perspectives
+## Recommended: Use `/generate-council`
+
+The fastest way to create project-tailored perspectives is the generator:
+
+```
+/generate-council
+```
+
+The generator:
+1. Reads your project's codebase, tech stack, and dependencies
+2. Detects available MCP servers
+3. Asks 2-3 targeted questions about your decision-making needs
+4. Generates 3-5 perspective agents with project-specific domain knowledge, calibrated temperatures, and perspective-appropriate bash permissions
+
+Re-run `/generate-council` whenever the project evolves — new MCP servers, new domain concerns, or team growth.
+
+The sections below describe how to create perspectives manually, which is useful for fine-tuning generated perspectives or creating highly specialized ones.
+
+---
+
+## Adding Custom Perspectives (Manual)
 
 ### When to Add a New Perspective
 
 **Good reasons:**
-- Your decisions have a recurring dimension not covered by default advocates
+- Your decisions have a recurring dimension not covered by default perspectives
 - Your organization values a specific concern (cost, compliance, UX, scalability)
 - You're applying councils to a non-engineering domain (hiring, marketing, procurement)
 
 **Examples of useful custom perspectives:**
-- **advocate-cost:** Financial implications, ROI, budget constraints
-- **advocate-ux:** User experience, accessibility, product intuition
-- **advocate-compliance:** Regulatory requirements, audit trails, data sovereignty
-- **advocate-scalability:** Growth considerations, capacity planning
-- **advocate-simplicity:** Reducing complexity, avoiding over-engineering
+- **perspective-cost:** Financial implications, ROI, budget constraints
+- **perspective-ux:** User experience, accessibility, product intuition
+- **perspective-compliance:** Regulatory requirements, audit trails, data sovereignty
+- **perspective-scalability:** Growth considerations, capacity planning
+- **perspective-simplicity:** Reducing complexity, avoiding over-engineering
 
 **Not useful:**
-- Duplicates of existing perspectives (don't create "advocate-security-2")
-- Perspectives that don't have distinct viewpoints ("advocate-common-sense")
+- Duplicates of existing perspectives (don't create "perspective-security-2")
+- Perspectives that don't have distinct viewpoints ("perspective-common-sense")
 - Joke perspectives that dilute serious debate
 
 ---
 
-## Creating an Advocate Agent
+## Creating a Perspective Agent
 
 ### Step 1: Copy a Template
 
 ```bash
-cp .opencode/agents/advocate-security.md .opencode/agents/advocate-cost.md
+cp .opencode/agents/perspective-security.md .opencode/agents/perspective-cost.md
 ```
 
 ### Step 2: Update the YAML Frontmatter
@@ -65,7 +85,7 @@ permission:
 
 **Key fields:**
 - **description:** What this perspective argues for (shown to user during setup)
-- **mode:** Always `subagent` for advocates
+- **mode:** Always `subagent` for perspectives
 - **temperature:** 0.3-0.6 depending on perspective personality
   - 0.3-0.4: Conservative, risk-focused (security, compliance)
   - 0.4-0.5: Balanced, evidence-based (maintainability, cost)
@@ -78,7 +98,7 @@ permission:
 ```markdown
 # Cost & Financial Perspective
 
-You are the **Cost advocate** in a structured council debate. Your role is to argue from a financial and resource allocation perspective.
+You are the **Cost perspective** in a structured council debate. Your role is to argue from a financial and resource allocation perspective.
 
 ## Your Core Values
 
@@ -147,7 +167,7 @@ Build on your position. Respond to others. Refine your recommendation.
 When invoked, present your argument following these guidelines.
 ```
 
-### Step 4: Test Your Advocate
+### Step 4: Test Your Perspective
 
 ```
 /council Should we migrate to Kubernetes for our container orchestration?
@@ -158,7 +178,7 @@ During setup, confirm that your new perspective appears in the list and behaves 
 ### Step 5: Refine Based on Output
 
 After first council:
-- Did the advocate stay in character?
+- Did the perspective stay in character?
 - Were arguments too abstract or too specific?
 - Did temperature feel right? (too random = too high, too rigid = too low)
 - Did 500-800 words feel sufficient?
@@ -169,7 +189,7 @@ Adjust prompt and temperature accordingly.
 
 ## Temperature Tuning Guide
 
-Temperature controls how creative vs deterministic the advocate's responses are.
+Temperature controls how creative vs deterministic the perspective's responses are.
 
 ### 0.2-0.3: Highly Deterministic
 **Personality:** Strict, standards-based, risk-averse  
@@ -244,7 +264,7 @@ Produce a synthesis document with exactly these sections:
 1. Consensus
 2. Key Tensions
 3. Risk Assessment
-4. **Cost-Benefit Analysis** (if cost advocate participated)
+4. **Cost-Benefit Analysis** (if cost perspective participated)
 5. Recommended Path Forward
 6. Minority Report
 7. Suggested Actions
@@ -261,7 +281,7 @@ Future enhancement (not yet supported): Specialized round types
 
 **Example ideas:**
 - **Convergence round:** Advocates explicitly seek common ground
-- **Rebuttal round:** Each advocate responds to one specific other perspective
+- **Rebuttal round:** Each perspective responds to one specific other perspective
 - **Synthesis round:** Advocates propose compromise positions
 
 ---
@@ -282,7 +302,7 @@ Future enhancement (not yet supported): Specialized round types
 - Expect perfection on first iteration (prompts require tuning)
 
 ### Naming Conventions:
-- File: `advocate-<perspective-id>.md` (lowercase, hyphenated)
+- File: `perspective-<perspective-id>.md` (lowercase, hyphenated)
 - ID: `<perspective-id>` (used in manifest, file names)
 - Description: "X perspective" (e.g., "Cost and financial perspective")
 
@@ -290,19 +310,19 @@ Future enhancement (not yet supported): Specialized round types
 
 ## Troubleshooting
 
-### Advocate Stays Off-Topic
+### Perspective Stays Off-Topic
 - **Cause:** Temperature too high, prompt too vague
 - **Fix:** Lower temperature by 0.1-0.2, add specific examples to prompt
 
-### Advocate Too Generic
+### Perspective Too Generic
 - **Cause:** Prompt lacks clear values/trade-offs
 - **Fix:** Strengthen "What You Argue For/Against" sections
 
-### Advocate Doesn't Engage in Round 2
+### Perspective Doesn't Engage in Round 2
 - **Cause:** Prompt doesn't emphasize responding to others
 - **Fix:** Add explicit "Round 2: Respond to other perspectives" section
 
-### Advocate Arguments Too Long/Short
+### Perspective Arguments Too Long/Short
 - **Cause:** Word count guideline not emphasized
 - **Fix:** Repeat "500-800 words" in multiple places in prompt
 
@@ -314,7 +334,7 @@ If you create a generally useful perspective, consider contributing it upstream:
 
 1. Test with 5+ different propositions
 2. Document the perspective's purpose and tuning rationale
-3. Submit a PR with the advocate file and examples
+3. Submit a PR with the perspective file and examples
 
 Valuable contributions:
 - Domain-specific perspectives (healthcare, finance, education)
@@ -325,6 +345,6 @@ Valuable contributions:
 
 ## Next Steps
 
-- **[Workflow](workflow.md):** Understand how custom advocates fit into the council lifecycle
+- **[Workflow](workflow.md):** Understand how custom perspectives fit into the council lifecycle
 - **[Synthesis](synthesis.md):** Learn how to customize synthesis output
-- **[File Formats](file-formats.md):** Understand advocate configuration structure
+- **[File Formats](file-formats.md):** Understand perspective configuration structure

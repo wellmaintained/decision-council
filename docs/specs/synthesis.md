@@ -260,7 +260,7 @@ Security likely would be concerned about OAuth token expiration times.
 Security did not explicitly address token expiration in their arguments.
 ```
 
-If an advocate didn't mention something, the summariser doesn't infer it.
+If a perspective didn't mention something, the summariser doesn't infer it.
 
 ### Does Not Soften Disagreements
 
@@ -315,13 +315,13 @@ The summariser reports and structures; it doesn't judge.
 
 Before finalizing synthesis, verify:
 
-- [ ] Every claim in Consensus is supported by advocate arguments
+- [ ] Every claim in Consensus is supported by perspective arguments
 - [ ] Every Tension identifies specific perspectives on each side
 - [ ] Every Risk is mapped to a perspective that raised it
 - [ ] Recommended Path Forward is actionable (not vague)
 - [ ] Minority Report captures substantive dissent (not noise)
 - [ ] Every Suggested Action has a responsible party and completion criteria
-- [ ] No arguments invented that weren't made by advocates
+- [ ] No arguments invented that weren't made by perspectives
 - [ ] Disagreements not artificially softened
 - [ ] Total length under 1500 words
 

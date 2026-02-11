@@ -18,14 +18,16 @@ This is a **configuration-driven multi-agent debate system** built on OpenCode's
 ```
 decision-council/
 ├── .opencode/                          # OpenCode framework directory
-│   ├── agents/                         # Agent definitions (5 files)
+│   ├── agents/                         # Agent definitions (6 files)
+│   │   ├── council-generator.md        # Council scaffolding agent
 │   │   ├── council-moderator.md        # Primary orchestrator
 │   │   ├── council-summariser.md       # Synthesis generator (hidden)
-│   │   ├── advocate-security.md        # Security perspective
-│   │   ├── advocate-velocity.md        # Speed perspective
-│   │   └── advocate-maintainability.md # Quality perspective
+│   │   ├── perspective-security.md        # Security perspective (example)
+│   │   ├── perspective-velocity.md        # Speed perspective (example)
+│   │   └── perspective-maintainability.md # Quality perspective (example)
 │   ├── commands/                       # Custom commands
-│   │   └── council.md                  # /council <topic> command
+│   │   ├── council.md                  # /council <topic> command
+│   │   └── generate-council.md         # /generate-council command
 │   ├── package.json                    # Dependencies (@opencode-ai/plugin)
 │   └── .gitignore                      # Ignore node_modules
 ├── docs/                               # Documentation and council artifacts
@@ -95,7 +97,7 @@ permission:
     "ls *": allow
   task:
     "*": deny
-    "advocate-*": allow
+    "perspective-*": allow
 hidden: true | false (optional, default: false)
 ---
 
@@ -127,7 +129,7 @@ current_round: 1
 visibility: open
 perspectives:
   - id: <perspective-id>
-    agent: advocate-<perspective-id>
+    agent: perspective-<perspective-id>
     rounds:
       1: { status: pending | in-progress | complete, file: round-1-<id>.md }
       2: { status: pending | in-progress | complete, file: round-2-<id>.md }
@@ -136,7 +138,7 @@ perspectives:
 **Round Files (round-N-<perspective>.md):**
 ```markdown
 ---
-agent: advocate-<perspective>
+agent: perspective-<perspective>
 perspective: <perspective-id>
 round: 1
 timestamp: <ISO8601>
@@ -191,7 +193,7 @@ perspectives: [security, velocity, maintainability]
 
 **Agents:**
 - Primary agents: `council-<name>` (e.g., `council-moderator`)
-- Subagents: `<category>-<name>` (e.g., `advocate-security`)
+- Subagents: `<category>-<name>` (e.g., `perspective-security`)
 - Hidden agents: Add `hidden: true` to YAML frontmatter
 
 **Perspectives:**
@@ -219,18 +221,34 @@ perspectives: [security, velocity, maintainability]
 
 **DO:**
 - Use clear section headers (`##` for main sections)
-- Keep response guidelines to 500-800 words for advocates
+- Keep response guidelines to 500-800 words for perspectives
 - Structure arguments with bullet points for clarity
 - Include specific examples or standards when applicable
 
 **DON'T:**
-- Make agents balanced—each advocate argues ONE perspective forcefully
+- Make agents balanced—each perspective argues ONE viewpoint forcefully
 - Allow moderator to advocate for any position (must remain neutral)
 - Soften disagreements in synthesis (if irreconcilable, say so)
 
 ---
 
 ## Agent Role Specifications
+
+### council-generator (Primary Agent)
+- **Mode:** primary
+- **Temperature:** 0.4 (balanced — reads project context, generates creative but grounded perspectives)
+- **Tools:** Full read + write/edit (creates perspective files) + limited bash
+- **Role:** Analyzes project context, asks targeted questions, generates tailored perspective agents
+- **Workflow:**
+  1. Phase 1: Reads project files (README, package manifests, existing agents, MCP config)
+  2. Phase 2: Asks 2-3 questions (decision domain, key tensions, MCP wiring)
+  3. Phase 3: Generates 3-5 perspective agent files with project-specific prompts
+- **Key Features:**
+  - Generates perspective-appropriate bash permissions per perspective
+  - Wires MCP servers to relevant perspectives when detected
+  - Calibrates temperature per perspective based on type
+  - Detects existing perspectives and offers keep/replace/mix
+  - Includes domain-specific presets as starting points
 
 ### council-moderator (Primary Agent)
 - **Mode:** primary
@@ -245,7 +263,7 @@ perspectives: [security, velocity, maintainability]
   - Write all files to `docs/council/active/<council-id>/`
   - Update `council.yaml` at every workflow transition
   - Present brief round summaries (3-5 sentences per perspective) at each gate
-  - Invoke advocates sequentially, one Task call per advocate per round
+  - Invoke perspectives sequentially, one Task call per perspective per round
 
 ### council-summariser (Hidden Subagent)
 - **Mode:** subagent
@@ -261,7 +279,7 @@ perspectives: [security, velocity, maintainability]
   - Each suggested action must be specific, assignable, verifiable
   - Keep total synthesis under 1500 words
 
-### advocate-* (Perspective Subagents)
+### perspective-* (Perspective Subagents)
 - **Mode:** subagent
 - **Temperature:** 0.3-0.6 (varies by perspective)
 - **Tools:** Read-only + limited bash (`cat`, `ls`, `grep`, `find`)
@@ -270,7 +288,7 @@ perspectives: [security, velocity, maintainability]
   - Present strongest arguments from your perspective (500-800 words)
   - Be specific and concrete—reference standards, patterns, evidence
   - Structure with clear sections
-  - In round 2+, respond to other advocates' arguments
+  - In round 2+, respond to other perspectives' arguments
   - Acknowledge valid points, but always return to your core perspective
   - Identify where you agree, disagree, and where you see false dichotomies
 
@@ -283,13 +301,13 @@ perspectives: [security, velocity, maintainability]
 
 ## Workflow Phases (5 Phases)
 
-1. **Setup** — Interactive proposition framing + advocate selection + parameter confirmation
-2. **Rounds** — Sequential advocate invocation via Task tool, write responses to round files
+1. **Setup** — Interactive proposition framing + perspective selection + parameter confirmation
+2. **Rounds** — Sequential perspective invocation via Task tool, write responses to round files
 3. **Gates** — User checkpoints: present round summaries, ask to proceed
 4. **Synthesis** — Invoke summariser with all round files, write synthesis.md
 5. **Archive** — Move council from `active/` to `archive/`, confirm to user
 
-**Default:** 2 rounds, open visibility (advocates see prior rounds)
+**Default:** 2 rounds, open visibility (perspectives see prior rounds)
 
 ---
 
@@ -301,7 +319,7 @@ perspectives: [security, velocity, maintainability]
 **If manifest corrupted:**
 - Moderator reports error and asks user to inspect `council.yaml`
 
-**If fewer than 2 advocates found:**
+**If fewer than 2 perspectives found:**
 - Moderator halts setup and informs user
 
 **If interrupted:**
@@ -311,8 +329,18 @@ perspectives: [security, velocity, maintainability]
 
 ## Adding New Advocate Agents
 
-1. Create `.opencode/agents/advocate-<name>.md`
-2. Use existing advocate files as templates
+### Recommended: Use the generator
+
+```
+/generate-council
+```
+
+The generator reads the project, asks targeted questions, and scaffolds tailored perspectives with project-specific prompts, calibrated temperatures, and appropriate bash permissions.
+
+### Manual creation
+
+1. Create `.opencode/agents/perspective-<name>.md`
+2. Use existing perspective files as templates
 3. Set appropriate temperature (0.3-0.6 based on perspective personality)
 4. Define perspective clearly in prompt
 5. Instruct to argue from ONE viewpoint (not balanced)
@@ -355,7 +383,7 @@ docs: <description>
 
 1. **Human-in-the-loop:** User controls workflow via gate confirmations
 2. **Plain text persistence:** All state in markdown/YAML (git-trackable, inspectable)
-3. **Agent-agnostic perspectives:** Users bring their own advocate prompts
+3. **Agent-agnostic perspectives:** Users bring their own perspective prompts
 4. **Minimal viable orchestration:** POC demonstrates simplest workflow with value
 5. **Sequential execution only:** No parallel subagent calls in POC
 
@@ -364,8 +392,8 @@ docs: <description>
 ## Scope (POC vs Future)
 
 **In Scope (POC):**
-- ✅ Moderator + summariser + 3 default advocates
-- ✅ Custom perspectives (user can add advocates)
+- ✅ Moderator + summariser + 3 default perspectives
+- ✅ Custom perspectives (user can add perspectives)
 - ✅ Sequential subagent invocation
 - ✅ Two-round debate with user gating
 - ✅ Structured 6-section synthesis
@@ -375,7 +403,7 @@ docs: <description>
 **Out of Scope (Future):**
 - ❌ Preset council types (architecture, adopt, incident, hire)
 - ❌ Parallel subagent execution
-- ❌ Blind visibility mode (advocates don't see prior rounds)
+- ❌ Blind visibility mode (perspectives don't see prior rounds)
 - ❌ Resume support for interrupted councils
 - ❌ MCP integration for external data sources
 - ❌ Progress tracking / real-time status
@@ -396,7 +424,7 @@ docs: <description>
 **To understand the system:**
 1. Read `docs/poc-prd.md` (complete specification)
 2. Examine `.opencode/agents/council-moderator.md` (primary orchestrator)
-3. Look at one advocate file (e.g., `advocate-security.md`) for perspective pattern
+3. Look at one perspective file (e.g., `perspective-security.md`) for the pattern
 
 **To test the system:**
 ```bash
@@ -404,8 +432,8 @@ docs: <description>
 ```
 
 **To add a new perspective:**
-1. Copy `.opencode/agents/advocate-security.md`
-2. Rename to `advocate-<your-perspective>.md`
+1. Copy `.opencode/agents/perspective-security.md`
+2. Rename to `perspective-<your-perspective>.md`
 3. Modify description, temperature, and prompt for your perspective
 4. Test by running `/council <topic>` and verifying moderator finds the new agent
 
