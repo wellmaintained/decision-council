@@ -4,7 +4,27 @@
 
 ---
 
-## Adding Custom Advocate Perspectives
+## Recommended: Use `/generate-council`
+
+The fastest way to create project-tailored advocates is the generator:
+
+```
+/generate-council
+```
+
+The generator:
+1. Reads your project's codebase, tech stack, and dependencies
+2. Detects available MCP servers
+3. Asks 2-3 targeted questions about your decision-making needs
+4. Generates 3-5 advocate agents with project-specific domain knowledge, calibrated temperatures, and perspective-appropriate bash permissions
+
+Re-run `/generate-council` whenever the project evolves — new MCP servers, new domain concerns, or team growth.
+
+The sections below describe how to create advocates manually, which is useful for fine-tuning generated advocates or creating highly specialized perspectives.
+
+---
+
+## Adding Custom Advocate Perspectives (Manual)
 
 ### When to Add a New Perspective
 

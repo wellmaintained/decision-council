@@ -18,14 +18,16 @@ This is a **configuration-driven multi-agent debate system** built on OpenCode's
 ```
 decision-council/
 ├── .opencode/                          # OpenCode framework directory
-│   ├── agents/                         # Agent definitions (5 files)
+│   ├── agents/                         # Agent definitions (6 files)
+│   │   ├── council-generator.md        # Council scaffolding agent
 │   │   ├── council-moderator.md        # Primary orchestrator
 │   │   ├── council-summariser.md       # Synthesis generator (hidden)
-│   │   ├── advocate-security.md        # Security perspective
-│   │   ├── advocate-velocity.md        # Speed perspective
-│   │   └── advocate-maintainability.md # Quality perspective
+│   │   ├── advocate-security.md        # Security perspective (example)
+│   │   ├── advocate-velocity.md        # Speed perspective (example)
+│   │   └── advocate-maintainability.md # Quality perspective (example)
 │   ├── commands/                       # Custom commands
-│   │   └── council.md                  # /council <topic> command
+│   │   ├── council.md                  # /council <topic> command
+│   │   └── generate-council.md         # /generate-council command
 │   ├── package.json                    # Dependencies (@opencode-ai/plugin)
 │   └── .gitignore                      # Ignore node_modules
 ├── docs/                               # Documentation and council artifacts
@@ -232,6 +234,22 @@ perspectives: [security, velocity, maintainability]
 
 ## Agent Role Specifications
 
+### council-generator (Primary Agent)
+- **Mode:** primary
+- **Temperature:** 0.4 (balanced — reads project context, generates creative but grounded perspectives)
+- **Tools:** Full read + write/edit (creates advocate files) + limited bash
+- **Role:** Analyzes project context, asks targeted questions, generates tailored advocate agents
+- **Workflow:**
+  1. Phase 1: Reads project files (README, package manifests, existing agents, MCP config)
+  2. Phase 2: Asks 2-3 questions (decision domain, key tensions, MCP wiring)
+  3. Phase 3: Generates 3-5 advocate agent files with project-specific prompts
+- **Key Features:**
+  - Generates perspective-appropriate bash permissions per advocate
+  - Wires MCP servers to relevant perspectives when detected
+  - Calibrates temperature per advocate based on perspective type
+  - Detects existing advocates and offers keep/replace/mix
+  - Includes domain-specific presets as starting points
+
 ### council-moderator (Primary Agent)
 - **Mode:** primary
 - **Temperature:** 0.2 (deterministic)
@@ -310,6 +328,16 @@ perspectives: [security, velocity, maintainability]
 ---
 
 ## Adding New Advocate Agents
+
+### Recommended: Use the generator
+
+```
+/generate-council
+```
+
+The generator reads the project, asks targeted questions, and scaffolds tailored advocates with project-specific prompts, calibrated temperatures, and appropriate bash permissions.
+
+### Manual creation
 
 1. Create `.opencode/agents/advocate-<name>.md`
 2. Use existing advocate files as templates

@@ -75,6 +75,16 @@ The entire debate (all rounds, synthesis) is archived for future reference.
 
 ## Quick Start
 
+### Generate a project-tailored council
+
+```
+/generate-council
+```
+
+The generator reads your project's codebase, tech stack, and MCP servers, asks a few questions, then scaffolds advocate agents tailored to your domain. Run this once to set up, then re-run whenever the project evolves.
+
+### Run a council debate
+
 ```
 /council Should we migrate our authentication to OAuth 2.0?
 ```
@@ -91,13 +101,12 @@ The moderator will guide you through setup, then orchestrate the debate. Typical
 
 | Component | Role | Mode |
 |-----------|------|------|
+| **council-generator** | Analyzes project, scaffolds tailored advocate agents | Primary agent |
 | **council-moderator** | Orchestrates entire workflow, neutral facilitator | Primary agent |
 | **council-summariser** | Produces synthesis from debate rounds | Hidden subagent |
-| **advocate-security** | Argues from risk-focused, conservative perspective | Subagent |
-| **advocate-velocity** | Argues from speed-focused, pragmatic perspective | Subagent |
-| **advocate-maintainability** | Argues from quality-focused, long-term perspective | Subagent |
+| **advocate-\*** | Perspective agents (generated per-project) | Subagent |
 
-You can add custom advocates for any perspective (cost, UX, compliance, scalability, etc.).
+The default advocates (security, velocity, maintainability) ship as examples. Use `/generate-council` to create advocates tailored to your project's domain, tech stack, and data sources.
 
 ### Debate Structure
 
@@ -209,8 +218,8 @@ If a council is interrupted, you must start a new one. The manifest and complete
 **Fixed round structure:**  
 All rounds use the same format. Dynamic round structures (e.g., "rebuttal round", "convergence round") are not yet supported.
 
-**No external data integration:**  
-Advocates argue from their prompts and general knowledge. MCP integration for live data (Snyk reports, Jira metrics, etc.) is planned for future versions.
+**MCP integration is manual:**
+The generator can wire MCP servers to relevant advocates when detected, but you must configure MCP servers in `.opencode/config.yaml` first.
 
 ---
 
@@ -218,10 +227,8 @@ Advocates argue from their prompts and general knowledge. MCP integration for li
 
 ### Planned Features (v0.6+)
 
-- **Preset council types:** Architecture, adoption, incident retrospective, hire committee
 - **Blind visibility mode:** Advocates argue independently in round 1, see others in round 2+
 - **Dynamic round structures:** Specialized round types for convergence, escalation, etc.
-- **MCP integration:** Advocates can query external data sources (security scanners, issue trackers)
 - **Resume support:** Continue interrupted councils from their last completed round
 
 ### Contribute
