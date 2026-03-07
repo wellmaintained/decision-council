@@ -327,7 +327,7 @@ perspectives: [security, velocity, maintainability]
 
 ---
 
-## Adding New Advocate Agents
+## Adding New Perspective Agents
 
 ### Recommended: Use the generator
 

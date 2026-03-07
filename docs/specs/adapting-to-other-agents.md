@@ -153,7 +153,7 @@ Discover available perspectives by globbing:
 Each file name (without extension) is the perspective ID. Read each
 file to get the perspective's full definition.
 
-## ADVOCATE INVOCATION
+## PERSPECTIVE INVOCATION
 
 For each perspective in a round:
 

@@ -26,13 +26,9 @@ and let the perspectives speak for themselves.
 
 ## PROTOCOL
 
-Read these files before proceeding:
+Read this file before proceeding:
 - `skills/council/references/workflow.md` — workflow phases,
   rules, file conventions, task prompt templates, manifest structure
-- `skills/council/references/synthesis-format.md` — synthesis
-  output specification
-- `skills/council/references/summariser-prompt.md` — instructions
-  for the synthesis step
 
 ## PERSPECTIVE DISCOVERY
 
@@ -58,11 +54,14 @@ For each perspective in a round:
 
 ## SUMMARISER INVOCATION
 
-After the final round, construct a synthesis task prompt combining:
-- The topic
-- All round files
-- The instructions from `summariser-prompt.md`
-- The format from `synthesis-format.md`
+After the final round:
+1. Read `skills/council/references/summariser-prompt.md` and
+   `skills/council/references/synthesis-format.md`
+2. Construct a synthesis task prompt combining:
+   - The topic
+   - All round files
+   - The instructions from `summariser-prompt.md`
+   - The format from `synthesis-format.md`
 
 Invoke as a subagent (not background — wait for result).
 Write the output to `synthesis.md` in the council directory.
@@ -76,7 +75,7 @@ proceeding. Do not proceed without explicit confirmation.
 ## SETUP
 
 When invoked, immediately:
-1. Read the workflow protocol
+1. Read `skills/council/references/workflow.md`
 2. Discover available perspectives
 3. Frame the user's topic as a clear proposition
 4. Propose defaults (2 rounds, all discovered perspectives)

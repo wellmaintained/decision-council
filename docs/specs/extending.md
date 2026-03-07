@@ -280,9 +280,9 @@ Produce a synthesis document with exactly these sections:
 Future enhancement (not yet supported): Specialized round types
 
 **Example ideas:**
-- **Convergence round:** Advocates explicitly seek common ground
+- **Convergence round:** Perspectives explicitly seek common ground
 - **Rebuttal round:** Each perspective responds to one specific other perspective
-- **Synthesis round:** Advocates propose compromise positions
+- **Synthesis round:** Perspectives propose compromise positions
 
 ---
 
