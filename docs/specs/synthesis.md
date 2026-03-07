@@ -8,7 +8,7 @@
 
 The synthesis document is **not** a transcript. It's a structured extraction that:
 - Surfaces what's agreed upon (low-controversy decisions)
-- Highlights tradeoffs that require conscious choice
+- Highlights trade-offs that require conscious choice
 - Maps risks to the perspectives that identified them
 - Recommends a path forward with reasoning
 - Preserves important dissent
@@ -46,7 +46,7 @@ All perspectives agree that:
 
 **What it contains:** Fundamental disagreements between perspectives.
 
-**Why it matters:** Tensions represent tradeoffs you must consciously choose. There's no "right" answer—you must weigh priorities.
+**Why it matters:** Tensions represent trade-offs you must consciously choose. There's no "right" answer — you must weigh priorities.
 
 **Structure per tension:**
 - What the disagreement is about
@@ -88,7 +88,7 @@ All perspectives agree that:
 ### If we proceed with 2-sprint migration (Velocity's recommendation):
 
 **Security risks:**
-- OAuth misconfiguration leading to unauthorized access (CVSS 9.1)
+- OAuth misconfiguration leading to unauthorised access (CVSS 9.1)
 - Insufficient testing of edge cases (password reset mid-migration, concurrent sessions)
 - No rollback plan if production issues emerge
 
@@ -101,7 +101,7 @@ All perspectives agree that:
 **Velocity risks:**
 - Mobile team blocked for additional 2 sprints, delaying Q2 OKRs
 - Opportunity cost: 2 sprints of engineering time on infrastructure vs features
-- Morale impact from extended timeline on aging system
+- Morale impact from extended timeline on ageing system
 
 **Maintainability risks:**
 - Prolonged support of two authentication systems during migration phase
@@ -110,7 +110,7 @@ All perspectives agree that:
 **Summariser guidelines:**
 - Group risks by decision path, not by severity
 - Map each risk to the perspective that raised it
-- Include both technical and organizational risks
+- Include both technical and organisational risks
 
 ---
 
@@ -141,14 +141,14 @@ This balances velocity's urgency with security's risk concerns:
 
 3. **Week 3:** Staged rollout to production (10% → 50% → 100% over 3 days). Monitor error rates, auth failures, session anomalies.
 
-**Contingency:** Maintain dual-auth support for 1 week post-migration. If critical issues emerge, rollback to legacy system while fixes are implemented.
+**Contingency:** Maintain dual-auth support for 1 week post-migration. If critical issues emerge, rollback to legacy system whilst fixes are implemented.
 
 **Why this is better than alternatives:**
 - Faster than security's 4-week proposal (mobile team unblocked 1 week earlier)
 - Safer than velocity's 2-week proposal (staged rollout + rollback plan mitigate misconfiguration risk)
 - Addresses maintainability's concern about technical debt (proper test plan and documentation time)
 
-**Tradeoffs accepted:**
+**Trade-offs accepted:**
 - Still impacts Q2 OKRs (though less than 4-week option)
 - Requires maintaining dual-auth temporarily (added complexity)
 ```
@@ -156,7 +156,7 @@ This balances velocity's urgency with security's risk concerns:
 **Summariser guidelines:**
 - Be specific: timelines, steps, responsibilities
 - Explain **why** this recommendation balances the perspectives
-- Acknowledge what tradeoffs are being accepted
+- Acknowledge what trade-offs are being accepted
 - If no clear recommendation exists, say so and explain why
 
 ---
@@ -173,7 +173,7 @@ This balances velocity's urgency with security's risk concerns:
 
 **Security's dissent on 3-week timeline:**
 
-While security accepts the 3-week compromise, they emphasize that staged rollout does not eliminate misconfiguration risk—it only contains blast radius. 
+Whilst security accepts the 3-week compromise, they emphasise that staged rollout does not eliminate misconfiguration risk — it only contains blast radius.
 
 Key concern not addressed in recommendation: OAuth token storage in mobile clients. If tokens are stored insecurely, compromise could affect all users regardless of rollout pace.
 
@@ -266,7 +266,7 @@ If a perspective didn't mention something, the summariser doesn't infer it.
 
 **Wrong:**
 ```markdown
-While security and velocity have different preferences, there's room for compromise.
+Whilst security and velocity have different preferences, there's room for compromise.
 ```
 
 **Right:**
@@ -276,7 +276,7 @@ Security and velocity identified fundamentally different risk tolerances. No mid
 
 If perspectives are irreconcilable, say so. Don't manufacture consensus.
 
-### Does Not Editorialize
+### Does Not Editorialise
 
 **Wrong:**
 ```markdown
@@ -294,15 +294,15 @@ The summariser reports and structures; it doesn't judge.
 
 ## Length Guidelines
 
-**Total synthesis:** 1000-1500 words
+**Total synthesis:** 1000–1500 words
 
 **Per section:**
-- Consensus: 100-200 words
-- Key Tensions: 300-400 words (largest section)
-- Risk Assessment: 200-300 words
-- Recommended Path Forward: 200-300 words
-- Minority Report: 100-200 words
-- Suggested Actions: 100-200 words
+- Consensus: 100–200 words
+- Key Tensions: 300–400 words (largest section)
+- Risk Assessment: 200–300 words
+- Recommended Path Forward: 200–300 words
+- Minority Report: 100–200 words
+- Suggested Actions: 100–200 words
 
 **Why these lengths:**
 - Long enough to be useful
@@ -313,7 +313,7 @@ The summariser reports and structures; it doesn't judge.
 
 ## Quality Checklist
 
-Before finalizing synthesis, verify:
+Before finalising synthesis, verify:
 
 - [ ] Every claim in Consensus is supported by perspective arguments
 - [ ] Every Tension identifies specific perspectives on each side
@@ -327,14 +327,7 @@ Before finalizing synthesis, verify:
 
 ---
 
-## Example: Full Synthesis
-
-See [example-synthesis-oauth-migration.md](../examples/synthesis-oauth-migration.md) for a complete synthesis document following this specification.
-
----
-
 ## Next Steps
 
 - **[Workflow](workflow.md):** Understand when synthesis happens in the council lifecycle
-- **[File Formats](file-formats.md):** Learn the YAML frontmatter for synthesis.md
-- **[Extending](extending.md):** Customize synthesis for domain-specific output
+- **[Extending](extending.md):** Customise synthesis for domain-specific output

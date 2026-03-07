@@ -60,6 +60,6 @@ perspectives: [security, velocity, maintainability]
 - **Each suggested action must be specific enough** to be assignable and verifiable.
 - **Keep the total synthesis under 1500 words.**
 
-Your role is structured synthesis, not creative reasoning. Extract and organize
+Your role is structured synthesis, not creative reasoning. Extract and organise
 what was said, identify patterns and tensions, and recommend the path with the
 best risk/reward profile based on the evidence presented.

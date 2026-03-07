@@ -1,15 +1,15 @@
 # AGENTS.md — AI Agent Guidelines for decision-council
 
-**Last Updated:** 2026-02-08  
-**Project:** OpenCode Council — Multi-Agent Debate Orchestration System
+**Last Updated:** 2026-03-07
+**Project:** Decision Council — Multi-Agent Debate Orchestration System
 
 ---
 
 ## Project Overview
 
-This is a **configuration-driven multi-agent debate system** built on OpenCode's agent framework. No traditional code, build system, or tests—just markdown agents with YAML frontmatter that orchestrate structured decision-making debates.
+This is a **configuration-driven multi-agent debate system** packaged as an Agent Skill. No traditional code, build system, or tests — just markdown files with YAML frontmatter that orchestrate structured decision-making debates.
 
-**Core Concept:** Multiple AI agents with different perspectives (security, velocity, maintainability) debate propositions through structured rounds, producing synthesized recommendations for human decision-makers.
+**Core Concept:** Multiple AI agents with different perspectives (security, velocity, maintainability) debate propositions through structured rounds, producing synthesised recommendations for human decision-makers.
 
 ---
 
@@ -17,40 +17,39 @@ This is a **configuration-driven multi-agent debate system** built on OpenCode's
 
 ```
 decision-council/
-├── .opencode/                          # OpenCode framework directory
-│   ├── agents/                         # Agent definitions (6 files)
-│   │   ├── council-generator.md        # Council scaffolding agent
-│   │   ├── council-moderator.md        # Primary orchestrator
-│   │   ├── council-summariser.md       # Synthesis generator (hidden)
-│   │   ├── perspective-security.md        # Security perspective (example)
-│   │   ├── perspective-velocity.md        # Speed perspective (example)
-│   │   └── perspective-maintainability.md # Quality perspective (example)
-│   ├── commands/                       # Custom commands
-│   │   ├── council.md                  # /council <topic> command
-│   │   └── generate-council.md         # /generate-council command
-│   ├── package.json                    # Dependencies (@opencode-ai/plugin)
-│   └── .gitignore                      # Ignore node_modules
-├── docs/                               # Documentation and council artifacts
-│   ├── council/                        # Council debate artifacts
-│   │   ├── active/                     # In-progress councils
-│   │   └── archive/                    # Completed councils
-│   ├── poc-prd.md                      # Complete PRD (544 lines)
-│   └── IMPLEMENTATION-COMPLETE.md      # Verification checklist
-├── .gitignore                          # Root ignore (Go-focused)
-└── README.md                           # Project overview
+├── skills/                            # Canonical skill content
+│   └── council/
+│       ├── SKILL.md                   # Council moderator (entry point)
+│       ├── perspectives/              # Perspective definitions
+│       │   ├── security.md
+│       │   ├── velocity.md
+│       │   └── maintainability.md
+│       └── references/                # Shared protocol files
+│           ├── workflow.md            # Workflow phases, rules, templates
+│           ├── summariser-prompt.md   # Synthesis instructions
+│           └── synthesis-format.md    # 6-section output specification
+├── .claude/
+│   └── skills/
+│       └── council -> ../../skills/council   # Symlink for Claude Code
+├── docs/                              # Documentation and council artefacts
+│   ├── council/                       # Council debate artefacts
+│   │   ├── active/                    # In-progress councils
+│   │   └── archive/                   # Completed councils
+│   └── specs/                         # Design specifications
+├── AGENTS.md                          # This file
+├── README.md                          # Project overview
+└── LICENSE
 ```
 
 ---
 
 ## Technology Stack
 
-- **Framework:** OpenCode agent platform
-- **Language:** Markdown + YAML (no compiled code)
-- **Package Manager:** Bun (bun.lock present)
-- **Runtime:** Node.js (implied by package.json)
-- **Dependencies:** `@opencode-ai/plugin` v1.1.53
+- **Format:** Agent Skill (markdown + YAML)
+- **Standard:** Agent Skills open standard ([agentskills.io](https://agentskills.io/specification))
+- **Discovery:** `.claude/skills/council/SKILL.md` (symlinked from `skills/council/`)
 
-**No build system, no tests, no linters.** This is a POC demonstrating agent orchestration via configuration files.
+**No build system, no tests, no linters.** This is a configuration-driven system — verification is interactive.
 
 ---
 
@@ -61,62 +60,55 @@ decision-council/
 This project has **no traditional build, lint, or test commands**. Verification is interactive:
 
 ```bash
-# Test the council workflow
 /council Should we use TypeScript or JavaScript for the new microservice?
 ```
 
-**Verification checklist:** See `docs/IMPLEMENTATION-COMPLETE.md` for expected file structures and manual verification steps.
-
-**Success criteria:** Defined in `docs/poc-prd.md` section 9.
-
 ---
 
-## File Structure Standards
+## Skill Structure
 
-### Agent Configuration Files (`.opencode/agents/*.md`)
+### Entry Point: `skills/council/SKILL.md`
+
+The SKILL.md file defines the council moderator. It contains:
+- YAML frontmatter (`name`, `description`, `allowed-tools`)
+- The moderator's system prompt
+
+The moderator reads reference files at runtime and discovers perspectives via glob.
+
+### Perspective Files (`skills/council/perspectives/*.md`)
+
+Each perspective is a standalone markdown file. No frontmatter — the moderator reads these at runtime and injects them into subagent task prompts.
 
 **Required structure:**
 ```markdown
----
-description: Brief description of agent purpose (string or multiline with >)
-mode: primary | subagent
-temperature: 0.1-0.9
-tools:
-  read: true/false
-  write: true/false
-  edit: true/false
-  bash: true/false
-  glob: true/false
-  grep: true/false
-  task: true/false
-  webfetch: true/false
-permission:
-  bash:
-    "*": deny
-    "cat *": allow
-    "ls *": allow
-  task:
-    "*": deny
-    "perspective-*": allow
-hidden: true | false (optional, default: false)
----
+# <Perspective Name> Perspective
 
-# Agent Name
+## Your Perspective
+[What this perspective argues for]
 
-[Agent instructions and prompt]
+## How You Argue
+[Argumentation strategy]
+
+## Key Areas of Focus
+[Domain-specific concerns]
+
+## In Round 2 and Beyond
+[Multi-round engagement rules]
+
+## Tone
+[Communication style]
+
+## Response Format
+[Word count, structure guidelines]
 ```
 
-**Temperature Guidelines:**
-- **0.1-0.2:** Deterministic tasks (orchestration, structured extraction)
-- **0.3-0.4:** Measured reasoning (security, maintainability)
-- **0.5-0.6:** Creative reasoning (velocity, pragmatic tradeoffs)
+### Reference Files (`skills/council/references/`)
 
-**Permission Syntax:**
-- Pattern matching with `"*"` wildcard
-- **Last match wins** (order matters!)
-- Use `deny` default + `allow` specific commands for safety
+- **workflow.md** — Workflow phases, rules, file conventions, task prompt templates, manifest structure
+- **summariser-prompt.md** — Instructions for the synthesis subagent
+- **synthesis-format.md** — 6-section synthesis output specification
 
-### Council Files (`docs/council/active/<id>/`)
+### Council Artefacts (`docs/council/active/<id>/`)
 
 **Manifest (council.yaml):**
 ```yaml
@@ -129,7 +121,6 @@ current_round: 1
 visibility: open
 perspectives:
   - id: <perspective-id>
-    agent: perspective-<perspective-id>
     rounds:
       1: { status: pending | in-progress | complete, file: round-1-<id>.md }
       2: { status: pending | in-progress | complete, file: round-2-<id>.md }
@@ -138,18 +129,17 @@ perspectives:
 **Round Files (round-N-<perspective>.md):**
 ```markdown
 ---
-agent: perspective-<perspective>
 perspective: <perspective-id>
 round: 1
 timestamp: <ISO8601>
 council_id: council-YYYY-MM-DD-<slug>
-responding_to: []  # Empty for round 1, list of prior round files for round 2+
+responding_to: []
 word_count: <number>
 ---
 
 # [Perspective Name] — Round [N]
 
-[Agent's argument content]
+[Perspective's argument content]
 ```
 
 **Synthesis File (synthesis.md):**
@@ -164,22 +154,11 @@ perspectives: [security, velocity, maintainability]
 # Council Synthesis: [Topic]
 
 ## Consensus
-[Points of agreement across perspectives]
-
 ## Key Tensions
-[Fundamental disagreements with strongest arguments from each side]
-
 ## Risk Assessment
-[Material risks of each decision path, mapped to perspectives]
-
 ## Recommended Path Forward
-[Concrete recommendation with best risk/reward profile]
-
 ## Minority Report
-[Important dissenting positions not adopted in recommendation]
-
 ## Suggested Actions
-[Numbered, concrete, assignable next steps]
 ```
 
 ---
@@ -187,14 +166,9 @@ perspectives: [security, velocity, maintainability]
 ## Naming Conventions
 
 **Files:**
-- Agent files: `<name>.md` (lowercase, hyphen-separated)
+- Perspective files: `<name>.md` (lowercase, hyphen-separated)
 - Council ID: `council-YYYY-MM-DD-<slug>` (date + slugified topic)
 - Round files: `round-<N>-<perspective-id>.md` (number + perspective)
-
-**Agents:**
-- Primary agents: `council-<name>` (e.g., `council-moderator`)
-- Subagents: `<category>-<name>` (e.g., `perspective-security`)
-- Hidden agents: Add `hidden: true` to YAML frontmatter
 
 **Perspectives:**
 - Use full words: `maintainability` (not `maintain`)
@@ -202,107 +176,27 @@ perspectives: [security, velocity, maintainability]
 
 ---
 
-## Code Style Guidelines
-
-### YAML Frontmatter
-
-**DO:**
-- Use consistent indentation (2 spaces)
-- Quote strings with special characters
-- Use multiline strings with `>` for long descriptions
-- Always include required fields: `description`, `mode`, `temperature`
-
-**DON'T:**
-- Use tabs (spaces only)
-- Omit required fields
-- Use invalid permission syntax (see pattern-matching format above)
+## Content Style Guidelines
 
 ### Markdown Content
 
 **DO:**
 - Use clear section headers (`##` for main sections)
-- Keep response guidelines to 500-800 words for perspectives
+- Keep response guidelines to 500–800 words for perspectives
 - Structure arguments with bullet points for clarity
 - Include specific examples or standards when applicable
 
 **DON'T:**
-- Make agents balanced—each perspective argues ONE viewpoint forcefully
-- Allow moderator to advocate for any position (must remain neutral)
+- Make perspectives balanced — each argues ONE viewpoint forcefully
+- Allow the moderator to advocate for any position (must remain neutral)
 - Soften disagreements in synthesis (if irreconcilable, say so)
-
----
-
-## Agent Role Specifications
-
-### council-generator (Primary Agent)
-- **Mode:** primary
-- **Temperature:** 0.4 (balanced — reads project context, generates creative but grounded perspectives)
-- **Tools:** Full read + write/edit (creates perspective files) + limited bash
-- **Role:** Analyzes project context, asks targeted questions, generates tailored perspective agents
-- **Workflow:**
-  1. Phase 1: Reads project files (README, package manifests, existing agents, MCP config)
-  2. Phase 2: Asks 2-3 questions (decision domain, key tensions, MCP wiring)
-  3. Phase 3: Generates 3-5 perspective agent files with project-specific prompts
-- **Key Features:**
-  - Generates perspective-appropriate bash permissions per perspective
-  - Wires MCP servers to relevant perspectives when detected
-  - Calibrates temperature per perspective based on type
-  - Detects existing perspectives and offers keep/replace/mix
-  - Includes domain-specific presets as starting points
-
-### council-moderator (Primary Agent)
-- **Mode:** primary
-- **Temperature:** 0.2 (deterministic)
-- **Tools:** Full (write, edit, bash, task) with restricted permissions
-- **Role:** Neutral orchestrator—frames propositions, manages rounds, gates transitions, triggers synthesis, archives councils
-- **Critical Rules:**
-  - Never advocate for any position
-  - Always gate round transitions through user confirmation
-  - Ask at most one question per message during setup
-  - Propose sensible defaults, ask for confirmation (not open-ended questions)
-  - Write all files to `docs/council/active/<council-id>/`
-  - Update `council.yaml` at every workflow transition
-  - Present brief round summaries (3-5 sentences per perspective) at each gate
-  - Invoke perspectives sequentially, one Task call per perspective per round
-
-### council-summariser (Hidden Subagent)
-- **Mode:** subagent
-- **Temperature:** 0.1 (structured extraction)
-- **Tools:** Read-only (read, glob, grep)
-- **Hidden:** true (not in @ autocomplete)
-- **Role:** Produces 6-section synthesis from all round files
-- **Rules:**
-  - Be precise—attribute positions to specific perspectives
-  - Do not invent arguments that were not made
-  - Do not soften disagreements (if irreconcilable, say so)
-  - Recommendation should be best risk/reward, not hollow compromise
-  - Each suggested action must be specific, assignable, verifiable
-  - Keep total synthesis under 1500 words
-
-### perspective-* (Perspective Subagents)
-- **Mode:** subagent
-- **Temperature:** 0.3-0.6 (varies by perspective)
-- **Tools:** Read-only + limited bash (`cat`, `ls`, `grep`, `find`)
-- **Role:** Argue forcefully from ONE perspective (not balanced)
-- **Guidelines:**
-  - Present strongest arguments from your perspective (500-800 words)
-  - Be specific and concrete—reference standards, patterns, evidence
-  - Structure with clear sections
-  - In round 2+, respond to other perspectives' arguments
-  - Acknowledge valid points, but always return to your core perspective
-  - Identify where you agree, disagree, and where you see false dichotomies
-
-**Perspective-Specific Temperatures:**
-- **Security** (0.3): Conservative, risk-focused, standards-based
-- **Velocity** (0.5): Pragmatic, speed-focused, opportunity cost framing
-- **Maintainability** (0.4): Balanced, quality-focused, long-term thinking
 
 ---
 
 ## Workflow Phases (5 Phases)
 
 1. **Setup** — Interactive proposition framing + perspective selection + parameter confirmation
-2. **Rounds** — Sequential perspective invocation via Task tool, write responses to round files
+2. **Rounds** — Parallel perspective invocation via subagents, responses written to round files
 3. **Gates** — User checkpoints: present round summaries, ask to proceed
 4. **Synthesis** — Invoke summariser with all round files, write synthesis.md
 5. **Archive** — Move council from `active/` to `archive/`, confirm to user
@@ -323,32 +217,21 @@ perspectives: [security, velocity, maintainability]
 - Moderator halts setup and informs user
 
 **If interrupted:**
-- POC does not support resume—user must start new council (manifest/files preserved for reference)
+- Manifest and completed round files remain. User must start a new council.
 
 ---
 
-## Adding New Perspective Agents
+## Adding New Perspectives
 
-### Recommended: Use the generator
-
-```
-/generate-council
-```
-
-The generator reads the project, asks targeted questions, and scaffolds tailored perspectives with project-specific prompts, calibrated temperatures, and appropriate bash permissions.
-
-### Manual creation
-
-1. Create `.opencode/agents/perspective-<name>.md`
+1. Create `skills/council/perspectives/<name>.md`
 2. Use existing perspective files as templates
-3. Set appropriate temperature (0.3-0.6 based on perspective personality)
-4. Define perspective clearly in prompt
-5. Instruct to argue from ONE viewpoint (not balanced)
-6. Include round 2+ response guidance
-7. Keep responses to 500-800 words
-8. Test with `/council <topic>` to verify moderator discovers the new agent
+3. Define the perspective clearly in the prompt
+4. Instruct to argue from ONE viewpoint (not balanced)
+5. Include round 2+ response guidance
+6. Keep responses to 500–800 words
+7. Test with `/council <topic>` to verify the moderator discovers the new perspective
 
-**Example perspectives:** cost-optimization, user-experience, scalability, compliance, innovation, technical-simplicity
+**Example perspectives:** cost-optimisation, user-experience, scalability, compliance, innovation, technical-simplicity
 
 ---
 
@@ -362,19 +245,17 @@ docs: <description>
 ```
 
 **Conventional Commit Types:**
-- `feat`: New agent, command, or feature
+- `feat`: New perspective, skill change, or feature
 - `fix`: Bug fix in configuration
 - `docs`: Documentation updates
-- `chore`: Dependency updates, config changes
+- `chore`: Config changes
 
 **What to commit:**
-- Agent configuration files
-- Command definitions
+- Skill files (SKILL.md, perspectives, references)
 - Documentation updates
 - Council manifests/round files (if preserving debates)
 
 **What NOT to commit:**
-- `node_modules/` (already ignored)
 - Active council directories (use `docs/.gitignore` if you want to exclude them)
 
 ---
@@ -384,47 +265,45 @@ docs: <description>
 1. **Human-in-the-loop:** User controls workflow via gate confirmations
 2. **Plain text persistence:** All state in markdown/YAML (git-trackable, inspectable)
 3. **Agent-agnostic perspectives:** Users bring their own perspective prompts
-4. **Minimal viable orchestration:** POC demonstrates simplest workflow with value
-5. **Sequential execution only:** No parallel subagent calls in POC
+4. **Minimal viable orchestration:** Simplest workflow with value
+5. **Parallel execution:** All perspectives within a round run simultaneously
 
 ---
 
-## Scope (POC vs Future)
+## Scope (Current vs Future)
 
-**In Scope (POC):**
-- ✅ Moderator + summariser + 3 default perspectives
-- ✅ Custom perspectives (user can add perspectives)
-- ✅ Sequential subagent invocation
-- ✅ Two-round debate with user gating
-- ✅ Structured 6-section synthesis
-- ✅ `/council` command
-- ✅ Archive completed councils
+**In Scope:**
+- Moderator + summariser + 3 default perspectives
+- Custom perspectives (user can add perspectives)
+- Parallel perspective execution per round
+- Two-round debate with user gating
+- Structured 6-section synthesis
+- `/council` command
+- Archive completed councils
 
 **Out of Scope (Future):**
-- ❌ Preset council types (architecture, adopt, incident, hire)
-- ❌ Parallel subagent execution
-- ❌ Blind visibility mode (perspectives don't see prior rounds)
-- ❌ Resume support for interrupted councils
-- ❌ MCP integration for external data sources
-- ❌ Progress tracking / real-time status
+- Preset council types (architecture, adopt, incident, hire)
+- Blind visibility mode (perspectives don't see prior rounds)
+- Resume support for interrupted councils
+- MCP integration for external data sources
 
 ---
 
 ## References
 
-- **Complete PRD:** `docs/poc-prd.md` (544 lines, authoritative specification)
-- **Implementation Status:** `docs/IMPLEMENTATION-COMPLETE.md` (verification checklist)
-- **Agent Examples:** `.opencode/agents/*.md` (5 working agent configurations)
-- **Active Council Example:** `docs/council/active/council-2026-02-08-*/` (real debate in progress)
+- **Skill definition:** `skills/council/SKILL.md`
+- **Workflow protocol:** `skills/council/references/workflow.md`
+- **Synthesis format:** `skills/council/references/synthesis-format.md`
+- **Summariser instructions:** `skills/council/references/summariser-prompt.md`
 
 ---
 
 ## Quick Start for AI Agents
 
 **To understand the system:**
-1. Read `docs/poc-prd.md` (complete specification)
-2. Examine `.opencode/agents/council-moderator.md` (primary orchestrator)
-3. Look at one perspective file (e.g., `perspective-security.md`) for the pattern
+1. Read `skills/council/SKILL.md` (entry point)
+2. Read `skills/council/references/workflow.md` (protocol)
+3. Look at one perspective file (e.g., `skills/council/perspectives/security.md`)
 
 **To test the system:**
 ```bash
@@ -432,19 +311,10 @@ docs: <description>
 ```
 
 **To add a new perspective:**
-1. Copy `.opencode/agents/perspective-security.md`
-2. Rename to `perspective-<your-perspective>.md`
-3. Modify description, temperature, and prompt for your perspective
-4. Test by running `/council <topic>` and verifying moderator finds the new agent
+1. Create `skills/council/perspectives/<your-perspective>.md`
+2. Follow the structure of existing perspective files
+3. Test by running `/council <topic>` and verifying the moderator finds it
 
 **To modify workflow:**
-- Edit `.opencode/agents/council-moderator.md` (workflow phases defined in prompt)
-- DO NOT change file formats without updating all agents that read/write those files
-
----
-
-**Questions? Issues?**
-- Check `docs/poc-prd.md` for specifications
-- Check `docs/IMPLEMENTATION-COMPLETE.md` for verification steps
-- Verify agent YAML frontmatter syntax (especially `permission` fields)
-- Ensure `council.yaml` manifest is valid YAML
+- Edit `skills/council/references/workflow.md`
+- DO NOT change file formats without updating all files that read/write those formats

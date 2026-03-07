@@ -32,7 +32,7 @@ A concrete recommendation with reasoning.
 - Best risk/reward profile, not a hollow compromise
 - Specific and actionable
 - Explain why this balances the perspectives
-- Acknowledge tradeoffs being accepted
+- Acknowledge trade-offs being accepted
 
 ## 5. Minority Report
 Important dissenting positions not adopted in the recommendation.
@@ -52,7 +52,7 @@ Numbered, concrete next steps if the recommendation is accepted.
 
 - Do not invent arguments that weren't made
 - Do not soften disagreements — if irreconcilable, say so
-- Do not editorialize — report and structure, don't judge
+- Do not editorialise — report and structure, don't judge
 - Attribute positions to specific perspectives
 - Keep total synthesis under 1500 words
 

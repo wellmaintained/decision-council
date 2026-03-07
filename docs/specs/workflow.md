@@ -30,10 +30,10 @@ Clear problem framing is critical. A poorly framed proposition leads to scattere
 ### User Control Points
 - Refine the proposition framing
 - Add/remove perspectives
-- Adjust number of rounds (1-3 typical)
+- Adjust number of rounds (1–3 typical)
 
 ### Duration
-2-4 exchanges, ~1 minute.
+2–4 exchanges, ~1 minute.
 
 ---
 
@@ -52,19 +52,19 @@ This mimics real deliberation where hearing other viewpoints sharpens your own t
 
 #### 1. Launch (Parallel)
 - Moderator constructs task prompt for each perspective
-- **All perspectives invoked simultaneously** via `run_in_background=true`
-- Manifest updated: each perspective marked `in-progress` with `task_id`
+- **All perspectives invoked simultaneously** via background subagents
+- Manifest updated: each perspective marked `in-progress`
 
 **Why parallel:** 3 perspectives complete in ~1 minute instead of ~3 minutes sequential. You don't wait for perspective A before perspective B starts thinking.
 
 #### 2. Collection
-- Moderator calls `background_output(task_id)` for each perspective
+- Moderator collects each perspective's result
 - Responses written to `round-<N>-<perspective>.md` files
-- Manifest updated: each perspective marked `complete`, task_id removed
+- Manifest updated: each perspective marked `complete`
 
 #### 3. Gate Checkpoint
 - Moderator reads all contributions for this round
-- Presents brief summaries (3-5 sentences per perspective)
+- Presents brief summaries (3–5 sentences per perspective)
 - Asks: "Proceed to round [N+1]?" or "Proceed to synthesis?"
 
 ### Round Inputs
@@ -78,7 +78,7 @@ This mimics real deliberation where hearing other viewpoints sharpens your own t
 - The perspective's own prior round(s)
 - All other perspectives' prior rounds
 
-This visibility model ensures perspectives can respond to each other while maintaining their core viewpoint.
+This visibility model ensures perspectives can respond to each other whilst maintaining their core viewpoint.
 
 ### User Control Points
 - Review summaries at each gate
@@ -104,7 +104,7 @@ Gates let you:
 ### What the Moderator Presents
 
 #### Per-Perspective Summaries
-3-5 sentences capturing:
+3–5 sentences capturing:
 - Core argument
 - Key evidence or reasoning
 - Stance on the proposition (support, oppose, conditional)
@@ -120,7 +120,7 @@ Gates let you:
 - **Conclude:** Skip remaining rounds, go straight to synthesis
 
 ### Duration
-1-3 minutes for you to read and decide.
+1–3 minutes for you to read and decide.
 
 ---
 
@@ -129,7 +129,7 @@ Gates let you:
 ### Why Synthesis Matters
 Raw debate rounds are useful, but synthesis extracts actionable insights. The summariser produces a structured document that:
 - Highlights consensus (low-controversy decisions)
-- Surfaces key tensions (tradeoffs you must consciously choose)
+- Surfaces key tensions (trade-offs you must consciously choose)
 - Maps risks to perspectives (who's worried about what)
 - Recommends a path forward (best risk/reward, not hollow compromise)
 - Preserves minority positions (dissent that deserves consideration)
@@ -137,7 +137,7 @@ Raw debate rounds are useful, but synthesis extracts actionable insights. The su
 ### What Happens
 
 1. **Moderator invokes summariser:** Passes all round files + topic
-2. **Summariser reads and extracts:** Not inventing arguments, just organizing what was said
+2. **Summariser reads and extracts:** Not inventing arguments, just organising what was said
 3. **Moderator writes synthesis.md:** 6-section document (see [Synthesis Format](synthesis.md))
 4. **Manifest updated:** Status set to `complete`
 
@@ -147,7 +147,7 @@ None during synthesis itself, but:
 - After synthesis, you decide whether to accept recommendation or conduct another council
 
 ### Duration
-~30-60 seconds for synthesis generation.
+~30–60 seconds for synthesis generation.
 
 ---
 
@@ -178,12 +178,12 @@ Instant.
 ## Error Handling
 
 ### Task Launch Failures
-If a perspective fails to start (bad agent config, OpenCode error):
+If a perspective fails to start (bad agent config, platform error):
 - Moderator reports which perspective failed
 - Offers: retry, skip that perspective, cancel entire round
 
 ### Task Execution Failures
-If `background_output` fails for a perspective (timeout, error in agent prompt):
+If a perspective times out or encounters an error:
 - Moderator reports which perspective failed and error message
 - Offers: retry just that perspective, continue without it, cancel round
 
@@ -206,10 +206,10 @@ If you or the system interrupts before completion:
 Useful for quick opinion gathering without cross-pollination:
 - Setup: specify 1 round
 - Round 1: All perspectives argue from initial positions
-- Gate: Review, decide to synthesize
+- Gate: Review, decide to synthesise
 - Synthesis: Based on round 1 only
 
-**Tradeoff:** Faster (~3 min total), but no opportunity for perspectives to respond to each other.
+**Trade-off:** Faster (~3 min total), but no opportunity for perspectives to respond to each other.
 
 ### Three-Round Council
 Useful for complex decisions needing deep exploration:
@@ -217,7 +217,7 @@ Useful for complex decisions needing deep exploration:
 - Round 2: Responses to each other
 - Round 3: Convergence or final rebuttals
 
-**Tradeoff:** More thorough (~6 min total), but diminishing returns if consensus emerges in round 2.
+**Trade-off:** More thorough (~6 min total), but diminishing returns if consensus emerges in round 2.
 
 ---
 
@@ -229,7 +229,7 @@ Useful for complex decisions needing deep exploration:
 |-----------|----------------------|----------------------|
 | 2 | ~1 min | ~3 min |
 | 3 | ~1 min | ~3 min |
-| 5 | ~1-2 min | ~4 min |
+| 5 | ~1–2 min | ~4 min |
 
 Time scales with **rounds**, not perspectives (thanks to parallel execution).
 
@@ -266,7 +266,7 @@ Cost scales linearly with (perspectives × rounds).
 
 ### When to Cancel and Restart
 - Proposition framing was fundamentally wrong
-- You realized you need different perspectives
+- You realised you need different perspectives
 - External information invalidated the premise
 
 ---

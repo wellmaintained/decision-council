@@ -1,6 +1,6 @@
 # Parallel Execution Specification
 
-**Why this matters:** Parallel execution makes councils 60-70% faster without sacrificing correctness or user control.
+**Why this matters:** Parallel execution makes councils 60–70% faster without sacrificing correctness or user control.
 
 ---
 
@@ -26,7 +26,7 @@ Round 1:
 Total: 3 minutes
 ```
 
-You sit idle while each perspective finishes. Adding a 4th perspective adds another minute.
+You sit idle whilst each perspective finishes. Adding a 4th perspective adds another minute.
 
 ### The Parallel Solution
 
@@ -37,7 +37,7 @@ Round 1:
 Total: ~1 minute (longest perspective)
 ```
 
-Adding a 4th perspective doesn't change duration—still ~1 minute.
+Adding a 4th perspective doesn't change duration — still ~1 minute.
 
 ### Performance Impact
 
@@ -45,7 +45,7 @@ Adding a 4th perspective doesn't change duration—still ~1 minute.
 |-----------|------------|----------|------------|
 | 2 | 2 min | 1 min | 50% |
 | 3 | 3 min | 1 min | 67% |
-| 5 | 5 min | 1-2 min | 60-80% |
+| 5 | 5 min | 1–2 min | 60–80% |
 
 **For a 2-round council with 3 perspectives:**
 - Sequential: ~6 minutes
@@ -62,7 +62,7 @@ Round 2 perspectives **need** to see round 1 results:
 - Security's round 2 argument responds to velocity's round 1 concerns
 - Velocity's round 2 refines its position based on maintainability's round 1 evidence
 
-If all rounds launched simultaneously, perspectives would argue in isolation—no cross-pollination, no refinement.
+If all rounds launched simultaneously, perspectives would argue in isolation — no cross-pollination, no refinement.
 
 ### User Control
 
@@ -83,9 +83,9 @@ Without gates, you'd wait for all rounds to complete, then discover the debate w
 ```
 For each perspective in current round:
   1. Construct task prompt (proposition + prior rounds if applicable)
-  2. Invoke via Task tool with run_in_background=true
-  3. Store task_id
-  4. Update manifest: perspective marked "in-progress" with task_id
+  2. Spawn background subagent
+  3. Store task reference
+  4. Update manifest: perspective marked "in-progress"
 ```
 
 **Result:** All perspectives start thinking simultaneously.
@@ -94,10 +94,10 @@ For each perspective in current round:
 
 **Moderator actions:**
 ```
-For each task_id:
-  1. Call background_output(task_id=...)
+For each subagent:
+  1. Collect result
   2. Write response to round-N-perspective.md
-  3. Update manifest: perspective marked "complete", task_id removed
+  3. Update manifest: perspective marked "complete"
 ```
 
 **Result:** All responses collected before proceeding to gate.
@@ -109,10 +109,10 @@ During parallel execution:
 perspectives:
   - id: security
     rounds:
-      1: { status: in-progress, file: round-1-security.md, task_id: task_abc123 }
+      1: { status: in-progress, file: round-1-security.md }
   - id: velocity
     rounds:
-      1: { status: in-progress, file: round-1-velocity.md, task_id: task_def456 }
+      1: { status: in-progress, file: round-1-velocity.md }
 ```
 
 After collection:
@@ -157,7 +157,7 @@ No possibility of conflict.
 - Round 1: All perspectives see only the proposition (no prior rounds exist)
 - Round 2: All perspectives see **completed** round 1 files
 
-No perspective sees another's in-progress round N response—only completed round N-1.
+No perspective sees another's in-progress round N response — only completed round N-1.
 
 ---
 
@@ -165,14 +165,14 @@ No perspective sees another's in-progress round N response—only completed roun
 
 ### Launch Failures
 
-**Scenario:** Task tool fails to invoke a perspective (bad config, permission error)
+**Scenario:** Subagent fails to start (bad config, permission error)
 
 **Moderator response:**
 ```
-"Failed to launch perspective-security for round 1: [error message]
+"Failed to launch security perspective for round 1: [error message]
 
 Options:
-1. Retry perspective-security
+1. Retry security perspective
 2. Skip security perspective for this round
 3. Cancel entire round
 
@@ -183,14 +183,14 @@ What would you like to do?"
 
 ### Execution Failures
 
-**Scenario:** `background_output` returns error (perspective timeout, prompt error, model failure)
+**Scenario:** A perspective times out or encounters an error
 
 **Moderator response:**
 ```
-"perspective-velocity failed during round 1 execution: [error message]
+"Velocity perspective failed during round 1 execution: [error message]
 
 Options:
-1. Retry perspective-velocity for round 1
+1. Retry velocity for round 1
 2. Continue with security and maintainability only
 3. Cancel entire round
 
@@ -206,7 +206,7 @@ What would you like to do?"
 **Moderator response:**
 ```
 "Round 1 complete for security and maintainability.
-perspective-velocity failed: [error message]
+Velocity failed: [error message]
 
 Continue with 2 perspectives, or retry velocity?"
 ```
@@ -320,9 +320,9 @@ Setup → All Rounds (parallel perspectives × rounds) → Single Gate → Synth
 
 **Idea:** Add small delays between perspective launches to avoid "thundering herd"
 
-**Benefit:** Reduces instantaneous load on OpenCode task scheduler
+**Benefit:** Reduces instantaneous load on the platform's task scheduler
 
-**Cost:** Adds 5-10 seconds per round
+**Cost:** Adds 5–10 seconds per round
 
 ### Timeout Detection
 
@@ -347,7 +347,7 @@ Setup → All Rounds (parallel perspectives × rounds) → Single Gate → Synth
 ### When Parallel Execution Matters Most
 
 - **Many perspectives:** 5+ perspectives benefit significantly from parallelism
-- **Fast models:** If perspectives finish in 30-60 seconds, parallel saves more time
+- **Fast models:** If perspectives finish in 30–60 seconds, parallel saves more time
 - **Multiple rounds:** Savings compound across rounds
 
 ### When It Matters Less
@@ -361,12 +361,11 @@ Setup → All Rounds (parallel perspectives × rounds) → Single Gate → Synth
 Watch for:
 - **One perspective consistently slow:** Check agent prompt complexity
 - **Frequent failures:** Check agent configurations and permissions
-- **High variance:** Some perspectives may need temperature adjustments
+- **High variance:** Some perspectives may need prompt adjustments
 
 ---
 
 ## Next Steps
 
 - **[Workflow](workflow.md):** Understand the full 5-phase council lifecycle
-- **[File Formats](file-formats.md):** Learn how task_id is tracked in manifests
 - **[Extending](extending.md):** Add custom perspectives that execute efficiently

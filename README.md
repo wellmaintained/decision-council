@@ -1,4 +1,4 @@
-# OpenCode Council
+# Decision Council
 
 **Multi-perspective AI debate system for better technical decisions**
 
@@ -11,7 +11,7 @@ Version 0.5 | [Full Documentation](docs/README.md)
 Council orchestrates structured debates between AI agents representing different perspectives (security, velocity, maintainability, etc.) to help you make consequential technical decisions.
 
 Instead of a single AI's opinion, you get:
-- Multiple expert viewpoints arguing from specialized perspectives
+- Multiple expert viewpoints arguing from specialised perspectives
 - Structured rounds where perspectives respond to each other
 - Synthesis documents surfacing consensus, tensions, and actionable recommendations
 
@@ -29,7 +29,7 @@ The moderator will:
 3. Orchestrate 2 rounds of debate (all perspectives per round execute in parallel)
 4. Present synthesis with recommendations
 
-**Typical duration:** 2-3 minutes for 2 rounds, 3 perspectives
+**Typical duration:** 2–3 minutes for 2 rounds, 3 perspectives
 
 ---
 
@@ -38,7 +38,7 @@ The moderator will:
 After debating "Should we adopt GraphQL for our API?", you'll get a synthesis covering:
 
 - **Consensus:** What all perspectives agree on
-- **Key Tensions:** Fundamental tradeoffs (e.g., velocity wants speed, security wants validation)
+- **Key Tensions:** Fundamental trade-offs (e.g., velocity wants speed, security wants validation)
 - **Risk Assessment:** What could go wrong with each path
 - **Recommended Path Forward:** Concrete decision with reasoning
 - **Minority Report:** Important dissenting views
@@ -51,7 +51,7 @@ After debating "Should we adopt GraphQL for our API?", you'll get a synthesis co
 **Good for:**
 - Architecture decisions (microservices, event-driven, monolith)
 - Technology adoption (new framework, language, tool)
-- Security vs velocity tradeoffs (MVP scope, technical debt)
+- Security vs velocity trade-offs (MVP scope, technical debt)
 - Process changes (CI/CD strategy, code review practices)
 
 **Not for:**
@@ -70,42 +70,45 @@ You provide a proposition. Moderator confirms framing and perspectives.
 - **Round 1:** All perspectives make their strongest case (parallel execution)
 - **Gate:** You review summaries, decide to continue
 - **Round 2:** Perspectives respond to each other (parallel execution)
-- **Gate:** You review, decide to synthesize
+- **Gate:** You review, decide to synthesise
 
 ### 3. Synthesis
 Summariser produces structured 6-section document from all rounds.
 
 ### 4. Archive
-Complete debate preserved under `.opencode/council/archive/` for future reference.
+Complete debate preserved under `docs/council/archive/` for future reference.
 
 ---
 
 ## Architecture
 
-Built on [OpenCode](https://opencode.sh) agent framework using markdown configuration files:
+Implemented as an **Agent Skill** following the [Agent Skills standard](https://agentskills.io/specification). The skill lives in `skills/council/` and is symlinked from `.claude/skills/council/` for Claude Code discovery.
 
-**Agents:**
-- `council-moderator` (primary) — Neutral orchestrator
-- `council-summariser` (hidden subagent) — Produces synthesis
-- `perspective-security` — Risk-focused perspective
-- `perspective-velocity` — Speed-focused perspective
-- `perspective-maintainability` — Quality-focused perspective
+**Components:**
+- `SKILL.md` — Council moderator (neutral orchestrator)
+- `perspectives/security.md` — Risk-focused perspective
+- `perspectives/velocity.md` — Speed-focused perspective
+- `perspectives/maintainability.md` — Quality-focused perspective
+- `references/workflow.md` — Workflow protocol
+- `references/summariser-prompt.md` — Synthesis instructions
+- `references/synthesis-format.md` — Output specification
 
-**Custom perspectives:** Add `.opencode/agents/perspective-<name>.md` for your domain
+**Custom perspectives:** Add `skills/council/perspectives/<name>.md`
 
-**Performance:** Parallel execution within rounds reduces time by ~67% (3 perspectives: 3min → 1min per round)
+**Performance:** Parallel execution within rounds reduces time by ~67% (3 perspectives: 3 min → 1 min per round)
 
 ---
 
 ## Documentation
 
-📖 **[Full Documentation](docs/README.md)**
+**[Full Documentation](docs/README.md)**
 
 ### Key Specs
 - [Workflow](docs/specs/workflow.md) — 5-phase council lifecycle
 - [Parallel Execution](docs/specs/parallel-execution.md) — How perspectives run simultaneously
 - [Synthesis Format](docs/specs/synthesis.md) — Output structure and guidelines
 - [Extending](docs/specs/extending.md) — Add custom perspectives
+- [Adapting to Other Agents](docs/specs/adapting-to-other-agents.md) — Cross-platform skill design
 
 ### For Developers
 - [AGENTS.md](AGENTS.md) — AI agent guidelines for this codebase
@@ -114,17 +117,16 @@ Built on [OpenCode](https://opencode.sh) agent framework using markdown configur
 
 ## Installation
 
-This is an OpenCode agent configuration, not a traditional package.
+This is an Agent Skill, not a traditional package.
 
 **Requirements:**
-- [OpenCode](https://opencode.sh) installed
-- Access to an LLM provider (OpenAI, Anthropic, etc.)
+- An AI coding agent that supports the Agent Skills standard (Claude Code, OpenCode, Cursor)
 
 **Setup:**
 ```bash
 git clone <this-repo>
 cd decision-council
-# OpenCode automatically discovers agents in .opencode/agents/
+# Claude Code discovers the skill via .claude/skills/council/ symlink
 ```
 
 ---
@@ -154,12 +156,12 @@ cd decision-council
 **v0.5** — Production-ready
 
 What works:
-- ✅ Interactive setup with proposition framing
-- ✅ Parallel perspective execution per round (60-70% faster)
-- ✅ Multi-round debates with user gates
-- ✅ Structured 6-section synthesis
-- ✅ Custom perspective support
-- ✅ Archive for debate history
+- Interactive setup with proposition framing
+- Parallel perspective execution per round (60–70% faster)
+- Multi-round debates with user gates
+- Structured 6-section synthesis
+- Custom perspective support
+- Archive for debate history
 
 What's planned:
 - Preset council types (architecture, adoption, incident, hire)
@@ -177,7 +179,7 @@ What's planned:
 
 ---
 
-## License
+## Licence
 
 MIT
 
@@ -185,4 +187,4 @@ MIT
 
 ## Credits
 
-Inspired by the realization that the best technical decisions emerge from structured debate between well-informed perspectives, not from single-viewpoint advice.
+Inspired by the realisation that the best technical decisions emerge from structured debate between well-informed perspectives, not from single-viewpoint advice.

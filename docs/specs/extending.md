@@ -1,173 +1,102 @@
-# Extending OpenCode Council
+# Extending Decision Council
 
-**Why this matters:** Council is designed to be extended. Custom perspectives let you adapt the system to your domain, organization, and decision-making needs.
-
----
-
-## Recommended: Use `/generate-council`
-
-The fastest way to create project-tailored perspectives is the generator:
-
-```
-/generate-council
-```
-
-The generator:
-1. Reads your project's codebase, tech stack, and dependencies
-2. Detects available MCP servers
-3. Asks 2-3 targeted questions about your decision-making needs
-4. Generates 3-5 perspective agents with project-specific domain knowledge, calibrated temperatures, and perspective-appropriate bash permissions
-
-Re-run `/generate-council` whenever the project evolves — new MCP servers, new domain concerns, or team growth.
-
-The sections below describe how to create perspectives manually, which is useful for fine-tuning generated perspectives or creating highly specialized ones.
+**Why this matters:** Council is designed to be extended. Custom perspectives let you adapt the system to your domain, organisation, and decision-making needs.
 
 ---
 
-## Adding Custom Perspectives (Manual)
+## Adding Custom Perspectives
 
 ### When to Add a New Perspective
 
 **Good reasons:**
 - Your decisions have a recurring dimension not covered by default perspectives
-- Your organization values a specific concern (cost, compliance, UX, scalability)
+- Your organisation values a specific concern (cost, compliance, UX, scalability)
 - You're applying councils to a non-engineering domain (hiring, marketing, procurement)
 
 **Examples of useful custom perspectives:**
-- **perspective-cost:** Financial implications, ROI, budget constraints
-- **perspective-ux:** User experience, accessibility, product intuition
-- **perspective-compliance:** Regulatory requirements, audit trails, data sovereignty
-- **perspective-scalability:** Growth considerations, capacity planning
-- **perspective-simplicity:** Reducing complexity, avoiding over-engineering
+- **cost:** Financial implications, ROI, budget constraints
+- **ux:** User experience, accessibility, product intuition
+- **compliance:** Regulatory requirements, audit trails, data sovereignty
+- **scalability:** Growth considerations, capacity planning
+- **simplicity:** Reducing complexity, avoiding over-engineering
 
 **Not useful:**
-- Duplicates of existing perspectives (don't create "perspective-security-2")
-- Perspectives that don't have distinct viewpoints ("perspective-common-sense")
+- Duplicates of existing perspectives (don't create "security-2")
+- Perspectives that don't have distinct viewpoints ("common-sense")
 - Joke perspectives that dilute serious debate
 
 ---
 
-## Creating a Perspective Agent
+## Creating a Perspective
 
 ### Step 1: Copy a Template
 
 ```bash
-cp .opencode/agents/perspective-security.md .opencode/agents/perspective-cost.md
+cp skills/council/perspectives/security.md skills/council/perspectives/cost.md
 ```
 
-### Step 2: Update the YAML Frontmatter
+### Step 2: Write the Perspective Prompt
 
-```yaml
----
-description: >
-  Cost and financial perspective for council debates. Argues from
-  budget constraints, ROI considerations, and opportunity cost framing.
-mode: subagent
-temperature: 0.4
-tools:
-  read: true
-  glob: true
-  grep: true
-  bash: true
-  write: false
-  edit: false
-  task: false
-  webfetch: false
-permission:
-  bash:
-    "*": deny
-    "cat *": allow
-    "ls *": allow
-    "grep *": allow
-    "find *": allow
----
-```
-
-**Key fields:**
-- **description:** What this perspective argues for (shown to user during setup)
-- **mode:** Always `subagent` for perspectives
-- **temperature:** 0.3-0.6 depending on perspective personality
-  - 0.3-0.4: Conservative, risk-focused (security, compliance)
-  - 0.4-0.5: Balanced, evidence-based (maintainability, cost)
-  - 0.5-0.6: Creative, pragmatic (velocity, UX, simplicity)
-- **tools:** Read-only + limited bash (never write/edit)
-- **permission:** Restrict bash to safe read commands
-
-### Step 3: Write the Perspective Prompt
+Follow the same structure as existing perspectives:
 
 ```markdown
 # Cost & Financial Perspective
 
-You are the **Cost perspective** in a structured council debate. Your role is to argue from a financial and resource allocation perspective.
+You are the **Cost perspective** in a structured council debate. Your role
+is to argue from a financial and resource allocation perspective.
 
-## Your Core Values
+## Your Perspective
 
-- **Budget responsibility:** Every technical decision has financial implications
-- **ROI thinking:** Investments should demonstrate clear returns
-- **Opportunity cost:** Resources spent here can't be spent elsewhere
-- **Total cost of ownership:** Consider implementation, maintenance, and opportunity costs
+You approach every decision through the lens of financial impact and
+resource efficiency. You are not balanced — you advocate for fiscal
+responsibility. Your job is to:
 
-## What You Argue For
+1. Quantify costs (implementation, maintenance, opportunity)
+2. Surface hidden financial implications
+3. Challenge ROI assumptions
+4. Propose cost-effective alternatives
+5. Evaluate total cost of ownership
 
-- Solutions that optimize for long-term financial sustainability
-- Quantifiable cost-benefit analysis where possible
-- Awareness of hidden costs (operational overhead, opportunity cost, switching costs)
-- Pragmatic tradeoffs when perfect solutions are prohibitively expensive
+## How You Argue
 
-## What You Argue Against
+- Lead with financial impact: how does the decision affect the bottom line?
+- Quantify where possible: even rough estimates are valuable
+- Think like a CFO: what's the ROI? What's the payback period?
+- Reference TCO models, NPV calculations where relevant
+- Propose cost-effective alternatives
 
-- Expensive solutions without clear ROI justification
-- Hidden costs that haven't been surfaced
-- "Gold plating" that adds cost without proportional value
-- Ignoring opportunity cost of resource allocation
+## Key Areas of Focus
 
-## How to Argue
+- Direct costs: implementation, licensing, infrastructure
+- Indirect costs: maintenance, training, opportunity cost
+- Financial risks: budget overruns, unexpected expenses
+- ROI considerations: what return justifies the investment?
+- Total cost of ownership: full lifecycle cost analysis
 
-### Round 1: Present Your Strongest Case
+## In Round 2 and Beyond
 
-Structure your argument:
-1. **Direct costs:** Implementation, licensing, infrastructure
-2. **Indirect costs:** Maintenance, training, opportunity cost
-3. **Financial risks:** Budget overruns, unexpected expenses
-4. **ROI considerations:** What return justifies the investment?
+1. Acknowledge valid points about value creation
+2. Highlight financial trade-offs in their proposals
+3. Propose cost-compatible alternatives
+4. Challenge ROI assumptions with business impact analysis
+5. Escalate if a proposal lacks clear financial justification
 
-Be specific. Quantify where possible (even rough estimates are valuable).
+## Tone
 
-**Example:**
-- Don't say: "This will be expensive"
-- Do say: "Migrating to Kubernetes requires: $50K/year managed cluster fees, 4 weeks of eng time ($40K opportunity cost), and ongoing 10% overhead for ops. Total first-year cost: ~$100K. What's the quantifiable return?"
+- Pragmatic but principled: fiscal responsibility is an investment
+- Evidence-based: grounded in financial analysis
+- Constructive: offer cost-effective solutions, not just objections
+- Persistent: cost discipline is non-negotiable
 
-### Round 2+: Respond to Other Perspectives
+## Response Format
 
-- **When you agree:** Acknowledge valid points about value creation
-- **When you disagree:** Challenge ROI assumptions, surface hidden costs
-- **Identify false dichotomies:** "Security says we must do X, but cheaper alternatives exist"
-
-Maintain your financial framing, but engage with their evidence.
-
-## Guidelines
-
-- **Keep responses to 500-800 words**
-- **Reference specific standards or frameworks when relevant** (e.g., TCO models, NPV calculations)
-- **Structure with clear sections** (Direct Costs, Hidden Costs, ROI Analysis, Recommendation)
-- **You are not balanced** — make the strongest financial case, don't hedge
-
-## Round-Specific Context
-
-**Round 1:** You will receive the proposition and nothing else. Argue from first principles.
-
-**Round 2+:** You will receive:
-- Your own prior round arguments
-- Other perspectives' prior arguments
-
-Build on your position. Respond to others. Refine your recommendation.
-
----
-
-When invoked, present your argument following these guidelines.
+- 500–800 words
+- Clear sections with headers
+- Bullet points for cost comparisons
+- End with a clear position statement
 ```
 
-### Step 4: Test Your Perspective
+### Step 3: Test Your Perspective
 
 ```
 /council Should we migrate to Kubernetes for our container orchestration?
@@ -175,109 +104,55 @@ When invoked, present your argument following these guidelines.
 
 During setup, confirm that your new perspective appears in the list and behaves as expected.
 
-### Step 5: Refine Based on Output
+### Step 4: Refine Based on Output
 
 After first council:
 - Did the perspective stay in character?
 - Were arguments too abstract or too specific?
-- Did temperature feel right? (too random = too high, too rigid = too low)
-- Did 500-800 words feel sufficient?
+- Did 500–800 words feel sufficient?
 
-Adjust prompt and temperature accordingly.
-
----
-
-## Temperature Tuning Guide
-
-Temperature controls how creative vs deterministic the perspective's responses are.
-
-### 0.2-0.3: Highly Deterministic
-**Personality:** Strict, standards-based, risk-averse  
-**Good for:** Compliance, security, regulatory perspectives  
-**Behavior:** Cites standards, repeats established patterns, minimal creativity
-
-**Example perspectives:**
-- Security (follows OWASP, NIST)
-- Compliance (follows regulations, audit requirements)
-
-### 0.4-0.5: Balanced
-**Personality:** Evidence-based, pragmatic, measured  
-**Good for:** Cost, maintainability, scalability perspectives  
-**Behavior:** Balances creativity with consistency, argues from principles but adapts
-
-**Example perspectives:**
-- Cost (considers multiple financial models)
-- Maintainability (balances long-term health with pragmatism)
-
-### 0.6-0.7: Creative
-**Personality:** Innovative, opportunistic, flexible  
-**Good for:** Velocity, UX, simplicity perspectives  
-**Behavior:** Generates novel arguments, challenges assumptions, thinks laterally
-
-**Example perspectives:**
-- Velocity (finds creative shortcuts)
-- UX (proposes unconventional solutions)
-- Simplicity (challenges complexity)
-
-### 0.8+: Highly Creative (Usually Too High)
-**Personality:** Unpredictable, experimental  
-**Risk:** Arguments may drift off-topic or become inconsistent  
-**Use case:** Rare — only for perspectives that intentionally challenge norms
+Adjust the prompt accordingly.
 
 ---
 
 ## Domain-Specific Councils
 
 ### Engineering Councils (Default)
-Perspectives: security, velocity, maintainability  
+Perspectives: security, velocity, maintainability
 Use cases: Architecture, technology adoption, process changes
 
 ### Product Councils
-Perspectives: ux, cost, velocity, simplicity  
-Use cases: Feature prioritization, product strategy, design decisions
+Perspectives: ux, cost, velocity, simplicity
+Use cases: Feature prioritisation, product strategy, design decisions
 
 ### Hiring Councils
-Perspectives: skills-match, culture-fit, growth-potential, diversity  
-Use cases: Candidate evaluation, leveling decisions
+Perspectives: skills-match, culture-fit, growth-potential, diversity
+Use cases: Candidate evaluation, levelling decisions
 
 ### Procurement Councils
-Perspectives: cost, vendor-reliability, integration-complexity, support-quality  
+Perspectives: cost, vendor-reliability, integration-complexity, support-quality
 Use cases: Tool selection, vendor evaluation
 
 ### Incident Response Councils
-Perspectives: impact-mitigation, root-cause, prevention, communication  
+Perspectives: impact-mitigation, root-cause, prevention, communication
 Use cases: Post-incident retrospectives, runbook development
 
 ---
 
-## Advanced Customization
+## Advanced Customisation
 
 ### Custom Synthesis Sections
 
-You can extend the synthesis format by customizing `council-summariser.md`:
-
-**Example: Add "Cost-Benefit Analysis" section**
-
-```markdown
-## OUTPUT STRUCTURE:
-Produce a synthesis document with exactly these sections:
-1. Consensus
-2. Key Tensions
-3. Risk Assessment
-4. **Cost-Benefit Analysis** (if cost perspective participated)
-5. Recommended Path Forward
-6. Minority Report
-7. Suggested Actions
-```
+You can extend the synthesis format by customising `skills/council/references/summariser-prompt.md` and `skills/council/references/synthesis-format.md`.
 
 **When to add sections:**
 - Domain-specific concerns that don't fit existing structure
-- Organization-specific reporting requirements
+- Organisation-specific reporting requirements
 - Integration with existing decision frameworks (e.g., RFC templates)
 
 ### Custom Round Structures
 
-Future enhancement (not yet supported): Specialized round types
+Future enhancement (not yet supported): Specialised round types
 
 **Example ideas:**
 - **Convergence round:** Perspectives explicitly seek common ground
@@ -290,41 +165,40 @@ Future enhancement (not yet supported): Specialized round types
 
 ### DO:
 - Give perspectives clear identity and values
-- Make trade-offs explicit (what this perspective optimizes for vs against)
+- Make trade-offs explicit (what this perspective optimises for vs against)
 - Provide concrete examples in the prompt
 - Test with real propositions before deploying
-- Adjust temperature based on actual behavior
+- Adjust based on actual behaviour
 
 ### DON'T:
 - Create "balanced" perspectives (defeats the purpose of multi-perspective debate)
 - Overlap significantly with existing perspectives
-- Add perspectives for every decision (3-5 is optimal)
+- Add perspectives for every decision (3–5 is optimal)
 - Expect perfection on first iteration (prompts require tuning)
 
 ### Naming Conventions:
-- File: `perspective-<perspective-id>.md` (lowercase, hyphenated)
+- File: `<perspective-id>.md` (lowercase, hyphenated)
 - ID: `<perspective-id>` (used in manifest, file names)
-- Description: "X perspective" (e.g., "Cost and financial perspective")
 
 ---
 
 ## Troubleshooting
 
 ### Perspective Stays Off-Topic
-- **Cause:** Temperature too high, prompt too vague
-- **Fix:** Lower temperature by 0.1-0.2, add specific examples to prompt
+- **Cause:** Prompt too vague
+- **Fix:** Add specific examples and sharper framing
 
 ### Perspective Too Generic
 - **Cause:** Prompt lacks clear values/trade-offs
-- **Fix:** Strengthen "What You Argue For/Against" sections
+- **Fix:** Strengthen "Your Perspective" and "How You Argue" sections
 
 ### Perspective Doesn't Engage in Round 2
-- **Cause:** Prompt doesn't emphasize responding to others
-- **Fix:** Add explicit "Round 2: Respond to other perspectives" section
+- **Cause:** Prompt doesn't emphasise responding to others
+- **Fix:** Add explicit guidance in "In Round 2 and Beyond" section
 
 ### Perspective Arguments Too Long/Short
-- **Cause:** Word count guideline not emphasized
-- **Fix:** Repeat "500-800 words" in multiple places in prompt
+- **Cause:** Word count guideline not emphasised
+- **Fix:** Repeat "500–800 words" in multiple places in prompt
 
 ---
 
@@ -338,13 +212,12 @@ If you create a generally useful perspective, consider contributing it upstream:
 
 Valuable contributions:
 - Domain-specific perspectives (healthcare, finance, education)
-- Organization-specific perspectives (startup vs enterprise)
-- Cross-cutting concerns (accessibility, internationalization)
+- Organisation-specific perspectives (startup vs enterprise)
+- Cross-cutting concerns (accessibility, internationalisation)
 
 ---
 
 ## Next Steps
 
 - **[Workflow](workflow.md):** Understand how custom perspectives fit into the council lifecycle
-- **[Synthesis](synthesis.md):** Learn how to customize synthesis output
-- **[File Formats](file-formats.md):** Understand perspective configuration structure
+- **[Synthesis](synthesis.md):** Learn how to customise synthesis output

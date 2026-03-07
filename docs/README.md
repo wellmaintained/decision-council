@@ -1,20 +1,20 @@
-# OpenCode Council — Multi-Perspective Decision Support
+# Decision Council — Multi-Perspective Decision Support
 
-**Version:** 0.5  
+**Version:** 0.5
 **Status:** Production-Ready
 
 ---
 
 ## What Is This?
 
-OpenCode Council orchestrates structured debates between AI agents representing different perspectives (security, velocity, maintainability, etc.) to help you make better technical decisions.
+Decision Council orchestrates structured debates between AI agents representing different perspectives (security, velocity, maintainability, etc.) to help you make better technical decisions.
 
 Instead of a single AI's opinion, you get:
-- **Multiple expert viewpoints** arguing from their specialized perspectives
+- **Multiple expert viewpoints** arguing from their specialised perspectives
 - **Structured rounds** where perspectives respond to each other's arguments
 - **Synthesis documents** that surface consensus, tensions, risks, and actionable recommendations
 
-Think of it as having a panel of domain experts debate the tradeoffs before you make a decision.
+Think of it as having a panel of domain experts debate the trade-offs before you make a decision.
 
 ---
 
@@ -22,14 +22,14 @@ Think of it as having a panel of domain experts debate the tradeoffs before you 
 
 Council is designed for **consequential technical decisions** where:
 - Multiple valid perspectives exist (security vs velocity, pragmatism vs purity)
-- Tradeoffs need to be surfaced and evaluated
+- Trade-offs need to be surfaced and evaluated
 - You want to avoid blind spots from a single viewpoint
-- The decision warrants 5-10 minutes of structured debate
+- The decision warrants 5–10 minutes of structured debate
 
 **Good use cases:**
 - Architecture decisions (microservices vs monolith, GraphQL vs REST)
 - Technology adoption (new language, framework, tool)
-- Security vs velocity tradeoffs (MVP scope, technical debt paydown)
+- Security vs velocity trade-offs (MVP scope, technical debt paydown)
 - Process changes (CI/CD strategy, testing approach)
 
 **Not ideal for:**
@@ -55,7 +55,7 @@ For each round:
 
 ### 3. Gate Checkpoints
 After each round, the moderator:
-- Summarizes what each perspective argued (3-5 sentences each)
+- Summarises what each perspective argued (3–5 sentences each)
 - Asks if you want to continue, redirect, or conclude early
 - This is your opportunity to steer the debate
 
@@ -75,14 +75,6 @@ The entire debate (all rounds, synthesis) is archived for future reference.
 
 ## Quick Start
 
-### Generate a project-tailored council
-
-```
-/generate-council
-```
-
-The generator reads your project's codebase, tech stack, and MCP servers, asks a few questions, then scaffolds perspective agents tailored to your domain. Run this once to set up, then re-run whenever the project evolves.
-
 ### Run a council debate
 
 ```
@@ -90,8 +82,8 @@ The generator reads your project's codebase, tech stack, and MCP servers, asks a
 ```
 
 The moderator will guide you through setup, then orchestrate the debate. Typical council duration:
-- **2 rounds, 3 perspectives:** ~2-3 minutes
-- **3 rounds, 5 perspectives:** ~4-5 minutes
+- **2 rounds, 3 perspectives:** ~2–3 minutes
+- **3 rounds, 5 perspectives:** ~4–5 minutes
 
 ---
 
@@ -99,14 +91,13 @@ The moderator will guide you through setup, then orchestrate the debate. Typical
 
 ### Components
 
-| Component | Role | Mode |
-|-----------|------|------|
-| **council-generator** | Analyzes project, scaffolds tailored perspective agents | Primary agent |
-| **council-moderator** | Orchestrates entire workflow, neutral facilitator | Primary agent |
-| **council-summariser** | Produces synthesis from debate rounds | Hidden subagent |
-| **perspective-\*** | Perspective agents (generated per-project) | Subagent |
+| Component | Role |
+|-----------|------|
+| **SKILL.md** | Moderator — orchestrates entire workflow, neutral facilitator |
+| **summariser-prompt.md** | Summariser — produces synthesis from debate rounds |
+| **perspectives/*.md** | Perspective agents (security, velocity, maintainability, etc.) |
 
-The default perspectives (security, velocity, maintainability) ship as examples. Use `/generate-council` to create perspectives tailored to your project's domain, tech stack, and data sources.
+The default perspectives (security, velocity, maintainability) ship as examples. Create additional perspectives tailored to your project's domain and concerns.
 
 ### Debate Structure
 
@@ -121,7 +112,7 @@ Gate 1: User reviews round 1, decides to continue
   ↓
 Round 2: All perspectives respond to each other (parallel)
   ↓
-Gate 2: User reviews round 2, decides to synthesize
+Gate 2: User reviews round 2, decides to synthesise
   ↓
 Summariser: Produces 6-section synthesis document
   ↓
@@ -155,11 +146,11 @@ All council state lives in markdown and YAML files under `docs/council/`. This m
 ### Agent-Agnostic Perspectives
 The moderator doesn't care what perspectives you use. You bring your own perspective agents. This makes the system:
 - Adaptable to any domain (not just engineering)
-- Extensible by users (add `perspective-cost.md`, done)
+- Extensible by users (add `perspectives/cost.md`, done)
 - Composable (different perspective sets for different decisions)
 
 ### Parallel Execution for Speed
-All perspectives within a round execute simultaneously. This maximizes throughput while maintaining:
+All perspectives within a round execute simultaneously. This maximises throughput whilst maintaining:
 - Sequential rounds for human control
 - Consistent input (all perspectives see same prior rounds)
 - Clean output (no race conditions on file writes)
@@ -173,13 +164,12 @@ All perspectives within a round execute simultaneously. This maximizes throughpu
 - **[Workflow](specs/workflow.md)** — Detailed breakdown of the 5-phase council lifecycle
 - **[Parallel Execution](specs/parallel-execution.md)** — How perspectives run simultaneously within rounds
 - **[Synthesis Format](specs/synthesis.md)** — Structure and guidelines for synthesis documents
-- **[File Formats](specs/file-formats.md)** — Council manifest, round files, and frontmatter schemas
 - **[Extending](specs/extending.md)** — How to add custom perspectives
+- **[Adapting to Other Agents](specs/adapting-to-other-agents.md)** — Cross-platform skill design
 
 ### For Developers
 
 - **[AGENTS.md](../AGENTS.md)** — AI agent guidelines for working with this codebase
-- **[Architecture Decision Log](specs/decisions.md)** — Why we made key design choices
 
 ---
 
@@ -209,17 +199,14 @@ All perspectives within a round execute simultaneously. This maximizes throughpu
 
 ## Current Limitations
 
-**Open visibility only:**  
+**Open visibility only:**
 Perspectives always see prior round contributions from other perspectives. "Blind mode" (independent arguments without cross-pollination) is not yet supported.
 
-**No resume support:**  
+**No resume support:**
 If a council is interrupted, you must start a new one. The manifest and completed round files remain intact for reference.
 
-**Fixed round structure:**  
+**Fixed round structure:**
 All rounds use the same format. Dynamic round structures (e.g., "rebuttal round", "convergence round") are not yet supported.
-
-**MCP integration is manual:**
-The generator can wire MCP servers to relevant perspectives when detected, but you must configure MCP servers in `.opencode/config.yaml` first.
 
 ---
 
@@ -228,7 +215,7 @@ The generator can wire MCP servers to relevant perspectives when detected, but y
 ### Planned Features (v0.6+)
 
 - **Blind visibility mode:** Perspectives argue independently in round 1, see others in round 2+
-- **Dynamic round structures:** Specialized round types for convergence, escalation, etc.
+- **Dynamic round structures:** Specialised round types for convergence, escalation, etc.
 - **Resume support:** Continue interrupted councils from their last completed round
 
 ### Contribute
@@ -237,8 +224,8 @@ Custom perspectives? Workflow improvements? File an issue or submit a PR.
 
 ---
 
-## License & Credits
+## Licence & Credits
 
-Built on [OpenCode](https://opencode.sh) agent framework.
+Built as an Agent Skill following the [Agent Skills standard](https://agentskills.io/specification).
 
-Inspired by the realization that the best technical decisions emerge from structured debate between well-informed perspectives, not from single-viewpoint advice.
+Inspired by the realisation that the best technical decisions emerge from structured debate between well-informed perspectives, not from single-viewpoint advice.
